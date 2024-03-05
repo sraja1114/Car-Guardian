@@ -2,9 +2,10 @@ import cv2 as cv
 import numpy as np
 
 # Distance constants 
+REFERENCE_DISTANCES = [49, 121, 177, 241, 294.5, 353, 415]
+CAR_REF_WIDTH = 72.6 #INCHES
 KNOWN_DISTANCE = 45 #INCHES
 PERSON_WIDTH = 16 #INCHES
-CAR_WIDTH = 69.6 #INCHES
 
 # Object detector constant 
 CONFIDENCE_THRESHOLD = 0.4
@@ -12,7 +13,10 @@ NMS_THRESHOLD = 0.3
  
 # colors for object detected
 COLORS = [(255,0,0),(255,0,255),(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 0)]
-GREEN =(0,255,0)
+GREEN = (0,255,0)
+LIGHT_RED = (75, 71, 255)
+CYAN = (0, 255, 255)
+WHITE = (255,255,255)
 BLACK =(0,0,0)
 # defining fonts 
 FONTS = cv.FONT_HERSHEY_COMPLEX
@@ -67,21 +71,38 @@ def distance_finder(focal_length, real_object_width, width_in_frmae):
 
 # reading the reference image from dir 
 ref_person = cv.imread('ReferenceImages/person.jpeg')
-ref_car = cv.imread('ReferenceImages/car.jpeg')
-
-car_data = object_detector(ref_car)
-car_width_in_rf = car_data[0][1]
-
 person_data = object_detector(ref_person)
 person_width_in_rf = person_data[0][1]
 
-print(f"Person width in pixels : {person_width_in_rf} mobile width in pixel: {car_width_in_rf}")
+car_focal_lengths = []
+for i in range(len(REFERENCE_DISTANCES)):
+    ref_car = cv.imread('ReferenceImages/car' + str(i) + '.png')
+    car_data = object_detector(ref_car)
 
-# finding focal length 
+    # ignore objects in the background
+    car_width = car_data[0][1]
+    if len(car_data) > 1:
+        car_width = max(item[1] for item in car_data)
+
+    print(f"Car {i} width in pixels: {car_width} - Distance: {REFERENCE_DISTANCES[i]} inches")
+    car_focal_lengths.append(focal_length_finder(REFERENCE_DISTANCES[i], CAR_REF_WIDTH, car_width))
+
+
+
+# finding person focal length
+print(f"Person width in pixels : {person_width_in_rf}")
 focal_person = focal_length_finder(KNOWN_DISTANCE, PERSON_WIDTH, person_width_in_rf)
 
-focal_mobile = focal_length_finder(KNOWN_DISTANCE, CAR_WIDTH, car_width_in_rf)
+# finding car focal length
+print(f"Focal length for cars: {car_focal_lengths}")
+car_focal_lengths.pop(0)
+car_focal_lengths.pop(0)
+focal_car = np.average(car_focal_lengths)
+
 cap = cv.VideoCapture(2)
+cap.set(3, 1440)
+cap.set(4, 1080)
+
 while True:
     ret, frame = cap.read()
 
@@ -91,10 +112,11 @@ while True:
             distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
             x, y = d[2]
         elif d[0] =='car':
-            distance = distance_finder (focal_mobile, CAR_WIDTH, d[1])
+            distance = distance_finder (focal_car, CAR_REF_WIDTH, d[1])
             x, y = d[2]
-        cv.rectangle(frame, (x, y-3), (x+150, y+23),BLACK,-1 )
-        cv.putText(frame, f'Dis: {round(distance,2)} inch', (x+5,y+13), FONTS, 0.48, GREEN, 2)
+        cv.rectangle(frame, (x, y-3), (x+150, y+40),BLACK,-1 )
+        cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
+        cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+30), FONTS, 0.48, LIGHT_RED, 2)
 
     cv.imshow('frame',frame)
     
