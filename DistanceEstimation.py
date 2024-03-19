@@ -1,5 +1,6 @@
 import cv2 as cv 
 import numpy as np
+import scipy.interpolate as spi
 
 # Distance constants 
 REFERENCE_DISTANCES = [49, 121, 177, 241, 294.5, 353, 415]
@@ -75,6 +76,7 @@ person_data = object_detector(ref_person)
 person_width_in_rf = person_data[0][1]
 
 car_focal_lengths = []
+car_widths = []
 for i in range(len(REFERENCE_DISTANCES)):
     ref_car = cv.imread('ReferenceImages/car' + str(i) + '.png')
     car_data = object_detector(ref_car)
@@ -83,11 +85,20 @@ for i in range(len(REFERENCE_DISTANCES)):
     car_width = car_data[0][1]
     if len(car_data) > 1:
         car_width = max(item[1] for item in car_data)
+    car_widths.append(car_width+10)
 
     print(f"Car {i} width in pixels: {car_width} - Distance: {REFERENCE_DISTANCES[i]} inches")
     car_focal_lengths.append(focal_length_finder(REFERENCE_DISTANCES[i], CAR_REF_WIDTH, car_width))
 
+# add filler values for when at 0 pixels and 1440 pixels
+# assume average focal length at far distances and 500 at close distances
+car_widths.append(0)
+car_focal_lengths.append(1130)
+car_widths.append(1440)
+car_focal_lengths.append(500)
 
+# interpolate the focal lengths
+interpolate_focal = spi.interp1d(car_widths, car_focal_lengths, kind='cubic')
 
 # finding person focal length
 print(f"Person width in pixels : {person_width_in_rf}")
@@ -95,8 +106,6 @@ focal_person = focal_length_finder(KNOWN_DISTANCE, PERSON_WIDTH, person_width_in
 
 # finding car focal length
 print(f"Focal length for cars: {car_focal_lengths}")
-car_focal_lengths.pop(0)
-car_focal_lengths.pop(0)
 focal_car = np.average(car_focal_lengths)
 
 cap = cv.VideoCapture(2)
@@ -112,7 +121,8 @@ while True:
             distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
             x, y = d[2]
         elif d[0] =='car':
-            distance = distance_finder (focal_car, CAR_REF_WIDTH, d[1])
+            distance = distance_finder (interpolate_focal(d[1]), CAR_REF_WIDTH, d[1])
+            #distance = distance_finder (focal_car, CAR_REF_WIDTH, d[1])
             x, y = d[2]
         cv.rectangle(frame, (x, y-3), (x+150, y+40),BLACK,-1 )
         cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
