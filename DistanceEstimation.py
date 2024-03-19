@@ -85,7 +85,7 @@ for i in range(len(REFERENCE_DISTANCES)):
     car_width = car_data[0][1]
     if len(car_data) > 1:
         car_width = max(item[1] for item in car_data)
-    car_widths.append(car_width+10)
+    car_widths.append(car_width)
 
     print(f"Car {i} width in pixels: {car_width} - Distance: {REFERENCE_DISTANCES[i]} inches")
     car_focal_lengths.append(focal_length_finder(REFERENCE_DISTANCES[i], CAR_REF_WIDTH, car_width))
