@@ -1,4 +1,5 @@
 import random
+import Alert
 import obd
 import time
 import cv2 as cv 
@@ -57,9 +58,11 @@ def object_detector(image):
         # getting the data 
         # 1: class name  2: object width in pixels, 3: position where have to draw text(distance)
         if classid ==0: # person class id 
-            data_list.append([class_names[classid], box[2], (box[0], box[1]-2)])
-        elif classid ==2:
-            data_list.append([class_names[classid], box[2], (box[0], box[1]-2)])
+            data_list.append([class_names[classid], box[2], (box[0], box[1]-2), box[3]])
+        elif classid ==2: #car class id
+            data_list.append([class_names[classid], box[2], (box[0], box[1]-2), box[3]])
+        elif classid == 7: #truck class id
+            data_list.append([class_names[classid], box[2], (box[0], box[1]-2), box[3]])
         # if you want inclulde more classes then you have to simply add more [elif] statements here
         # returning list containing the object data. 
     return data_list
@@ -127,7 +130,12 @@ cmd = obd.commands.SPEED
 last_time = time.time()
 
 #current speed
-speed = 0.0
+current_speed = 0.0
+last_speed = 0.0
+acceleration = 0.0
+
+#create an alert object
+alert = Alert.Alert()
 
 while True:
     # get the current time
@@ -139,15 +147,21 @@ while True:
         response = connection.query(cmd)
 
         # user-friendly unit conversions
-        speed = response.value.to("mph")
+        current_speed = float(response.value.to("mph"))
+        print(current_speed)
 
         #random speed value for testing
-        #speed = random.randint(0, 100)
-
-        print(speed)
+        # current_speed = random.randint(0, 100)
+        # print(current_speed)
+        
+        #calculate acceleration
+        acceleration = (current_speed - last_speed) / (current_time - last_time)
 
         # update the last query time
         last_time = current_time
+        last_speed = current_speed
+        
+    
 
     #reading the frame from camera for object detection
     ret, frame = cap.read()
@@ -164,11 +178,15 @@ while True:
         elif d[0] == 'truck':
             distance = distance_finder (interpolate_focal(d[1]), AVG_TRUCK_WIDTH, d[1])
             #distance = distance_finder (focal_car, AVG_TRUCK_WIDTH, d[1])
+        
         cv.rectangle(frame, (x, y-3), (x+150, y+40),BLACK,-1 )
         cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
         cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+30), FONTS, 0.48, LIGHT_RED, 2)
     
-    cv.putText(frame, f'Speed: {round(speed, 2)} mph', (10, 30), FONTS, 0.7, (0, 255, 0), 2)
+    if (acceleration > 0) and (current_speed > 0) and (distance > 0):
+        alert.pre_collision_warning(current_speed, acceleration, distance)
+    cv.putText(frame, f'Speed: {round(current_speed, 2)} mph', (10, 30), FONTS, 0.7, GREEN, 2)
+    cv.putText(frame, f'Acceleration: {round(acceleration, 2)} mph/s', (10, 60), FONTS, 0.7, LIGHT_RED, 2)
     cv.imshow('frame',frame)
     
     key = cv.waitKey(1)

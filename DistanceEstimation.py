@@ -53,9 +53,11 @@ def object_detector(image):
         # getting the data 
         # 1: class name  2: object width in pixels, 3: position where have to draw text(distance)
         if classid ==0: # person class id 
-            data_list.append([class_names[classid], box[2], (box[0], box[1]-2)])
-        elif classid ==2:
-            data_list.append([class_names[classid], box[2], (box[0], box[1]-2)])
+            data_list.append([class_names[classid], box[2], (box[0], box[1]-2), box[3]])
+        elif classid ==2: #car class id
+            data_list.append([class_names[classid], box[2], (box[0], box[1]-2), box[3]])
+        elif classid == 7: #truck class id
+            data_list.append([class_names[classid], box[2], (box[0], box[1]-2), box[3]])
         # if you want inclulde more classes then you have to simply add more [elif] statements here
         # returning list containing the object data. 
     return data_list
@@ -115,18 +117,43 @@ cap.set(4, 1080)
 while True:
     ret, frame = cap.read()
 
-    data = object_detector(frame) 
+    data = object_detector(frame)
+    center_car = []
+    count = 0
     for d in data:
         if d[0] =='person':
             distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
             x, y = d[2]
         elif d[0] =='car':
+            print("Focal:", interpolate_focal(d[1]))
             distance = distance_finder (interpolate_focal(d[1]), CAR_REF_WIDTH, d[1])
             #distance = distance_finder (focal_car, CAR_REF_WIDTH, d[1])
             x, y = d[2]
-        cv.rectangle(frame, (x, y-3), (x+150, y+40),BLACK,-1 )
+            # print(count, ":", 'x:', x, 'y:', y)
+            # if x is between 400 and 1000 then append the distance to the center_car list
+            if x > 350 and x < 1050: 
+                center_car.append([x, distance])
+        count += 1 
+        
+        #print the distance of the car closest to the center
+        if len(center_car) > 0:
+            center_car = sorted(center_car, key=lambda x: abs(x[0] - 720))
+            pre_collision_dist = center_car[0][1]
+            print(f"Distance: {pre_collision_dist} inches")
+        
+        cv.rectangle(frame, (x, y-3), (x+150, y+75),BLACK,-1 )
+        #put a rectangle in the middle 1/3 of the frame (1440px wide)
+        cv.rectangle(frame, (350, 0), (1050, 1080), CYAN, 2)
+        #put a point in the middle of the frame
+        cv.circle(frame, (720, 540), 5, GREEN, -1)
+        cv.circle(frame, (350, 540), 5, GREEN, -1)
+        cv.circle(frame, (1050, 540), 5, GREEN, -1)
         cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
-        cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+30), FONTS, 0.48, LIGHT_RED, 2)
+        cv.putText(frame, f'Feet: {round(distance/12.0,2)} ft', (x+5,y+30), FONTS, 0.48, LIGHT_RED, 2)
+        cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+48), FONTS, 0.48, LIGHT_RED, 2)
+        #print x
+        cv.putText(frame, f'X: {x}', (x+5,y+66), FONTS, 0.48, LIGHT_RED, 2)
+
 
     cv.imshow('frame',frame)
     
