@@ -125,27 +125,31 @@ while True:
             distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
             x, y = d[2]
         elif d[0] =='car':
-            print("Focal:", interpolate_focal(d[1]))
+            # print("Focal:", interpolate_focal(d[1]))
             distance = distance_finder (interpolate_focal(d[1]), CAR_REF_WIDTH, d[1])
             #distance = distance_finder (focal_car, CAR_REF_WIDTH, d[1])
             x, y = d[2]
             # print(count, ":", 'x:', x, 'y:', y)
             # if x is between 400 and 1000 then append the distance to the center_car list
-            if x > 350 and x < 1050: 
-                center_car.append([x, distance])
+            if x > 350 and x < 1050:
+                center = int(x + d[1]/2)
+                # cv.circle(frame, (center, 540), 5, GREEN, 3)
+                center_car.append([center, distance])
         count += 1 
         
         #print the distance of the car closest to the center
         if len(center_car) > 0:
+            print(center_car)
             center_car = sorted(center_car, key=lambda x: abs(x[0] - 720))
             pre_collision_dist = center_car[0][1]
+            cv.circle(frame, (center_car[0][0], 540), 5, GREEN, 3)
             print(f"Distance: {pre_collision_dist} inches")
         
         cv.rectangle(frame, (x, y-3), (x+150, y+75),BLACK,-1 )
         #put a rectangle in the middle 1/3 of the frame (1440px wide)
         cv.rectangle(frame, (350, 0), (1050, 1080), CYAN, 2)
         #put a point in the middle of the frame
-        cv.circle(frame, (720, 540), 5, GREEN, -1)
+        # cv.circle(frame, (720, 540), 5, GREEN, -1)
         cv.circle(frame, (350, 540), 5, GREEN, -1)
         cv.circle(frame, (1050, 540), 5, GREEN, -1)
         cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
