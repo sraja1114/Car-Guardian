@@ -13,9 +13,9 @@ class Alert:
         pygame.mixer.music.load(mp3_file_path)
         pygame.mixer.music.play()
 
-    def pre_collision_warning(self, speed_mph, acceleration_mphps, distance_in, sensitivity='high'):
+    def pre_collision_warning(self, velocity_mph, acceleration_mphps, distance_in, sensitivity='high'):
         # Convert mph to m/s
-        speed_mps = speed_mph * 0.44704
+        velocity_mps = velocity_mph * 0.44704
         # Convert mph/s to m/s^2
         acceleration_mps2 = acceleration_mphps * 0.44704
         # Convert inches to meters
@@ -24,12 +24,12 @@ class Alert:
         # Check if acceleration is zero
         if acceleration_mps2 != 0:
             # Calculate stopping distance and time (assuming constant deceleration)
-            stopping_distance = (speed_mps**2) / (2 * acceleration_mps2)
-            stopping_time = speed_mps / acceleration_mps2
+            stopping_distance = (velocity_mps**2) / (2 * acceleration_mps2)
+            stopping_time = velocity_mps / acceleration_mps2
         else:
             # Calculate stopping distance and time (assuming constant velocity)
             stopping_distance = distance_m
-            stopping_time = distance_m / speed_mps
+            stopping_time = distance_m / velocity_mps
 
 
         # Adjust stopping distance based on sensitivity level

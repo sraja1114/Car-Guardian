@@ -3,8 +3,9 @@ import numpy as np
 import scipy.interpolate as spi
 
 # Distance constants 
-REFERENCE_DISTANCES = [49, 121, 177, 241, 294.5, 353, 415]
-CAR_REF_WIDTH = 72.6 #INCHES
+REFERENCE_DISTANCES = [52.476, 101.22, 138.588, 177.756, 227.796, 267.396, 325.152, 390, 465.084, 532.836, 621.54, 966.264, 1291.2, 1484.76]
+CAR_REF_WIDTH = 78.6 #INCHES
+AVG_CAR_WIDTH = 70 #INCHES
 KNOWN_DISTANCE = 45 #INCHES
 PERSON_WIDTH = 16 #INCHES
 
@@ -78,7 +79,11 @@ person_data = object_detector(ref_person)
 person_width_in_rf = person_data[0][1]
 
 car_focal_lengths = []
-car_widths = []
+
+# throw in closest image that is not recognized
+car_widths = [1106]
+car_focal_lengths.append(focal_length_finder(25.98, CAR_REF_WIDTH, 1106))
+
 for i in range(len(REFERENCE_DISTANCES)):
     ref_car = cv.imread('ReferenceImages/car' + str(i) + '.png')
     car_data = object_detector(ref_car)
@@ -95,9 +100,9 @@ for i in range(len(REFERENCE_DISTANCES)):
 # add filler values for when at 0 pixels and 1440 pixels
 # assume average focal length at far distances and 500 at close distances
 car_widths.append(0)
-car_focal_lengths.append(1130)
+car_focal_lengths.append(1440)
 car_widths.append(1440)
-car_focal_lengths.append(500)
+car_focal_lengths.append(200)
 
 # interpolate the focal lengths
 interpolate_focal = spi.interp1d(car_widths, car_focal_lengths, kind='cubic')
@@ -118,45 +123,67 @@ while True:
     ret, frame = cap.read()
 
     data = object_detector(frame)
+    relative_velocity = 0
     center_car = []
+    distances = []
     count = 0
     for d in data:
         if d[0] =='person':
             distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
             x, y = d[2]
-        elif d[0] =='car':
+        elif d[0] =='car' or d[0] == 'truck':
             # print("Focal:", interpolate_focal(d[1]))
             distance = distance_finder (interpolate_focal(d[1]), CAR_REF_WIDTH, d[1])
             #distance = distance_finder (focal_car, CAR_REF_WIDTH, d[1])
             x, y = d[2]
             # print(count, ":", 'x:', x, 'y:', y)
             # if x is between 400 and 1000 then append the distance to the center_car list
-            if x > 350 and x < 1050:
+            center = int(x + d[1]/2)
+            if center > 520 and center < 920:
                 center = int(x + d[1]/2)
                 # cv.circle(frame, (center, 540), 5, GREEN, 3)
-                center_car.append([center, distance])
+                center_car.append([center, distance, d[1], d[3]])
         count += 1 
         
         #print the distance of the car closest to the center
         if len(center_car) > 0:
-            print(center_car)
             center_car = sorted(center_car, key=lambda x: abs(x[0] - 720))
+            #if two cars are within 100 pixels of each other, find the area of the bounding box
+            if len(center_car) > 1 and abs(center_car[0][0] - center_car[1][0]) < 150:
+                area1 = center_car[0][2] * center_car[0][3] * (150 - abs(720 - center_car[0][0]))
+                area2 = center_car[1][2] * center_car[1][3] * (150 - abs(720 - center_car[1][0]))
+
+                #show area on screen
+                # cv.putText(frame, f'Area1: {area1}', (center_car[0][0], 540), FONTS, 0.48, GREEN, 2)
+                # cv.putText(frame, f'Area2: {area2}', (center_car[1][0], 540), FONTS, 0.48, GREEN, 2)
+                # print("1",center_car)
+
+                if area1 > area2:
+                    # print("Area 1 Larger")
+                    center_car.pop(1)
+                else:
+                    # print("Area 2 Larger")
+                    center_car.pop(0)
             pre_collision_dist = center_car[0][1]
-            cv.circle(frame, (center_car[0][0], 540), 5, GREEN, 3)
+            distances.append(pre_collision_dist)
+            print("2", center_car)
+            cv.circle(frame, (center_car[0][0], 540), 5, GREEN, 5)
             print(f"Distance: {pre_collision_dist} inches")
         
-        cv.rectangle(frame, (x, y-3), (x+150, y+75),BLACK,-1 )
-        #put a rectangle in the middle 1/3 of the frame (1440px wide)
-        cv.rectangle(frame, (350, 0), (1050, 1080), CYAN, 2)
-        #put a point in the middle of the frame
-        # cv.circle(frame, (720, 540), 5, GREEN, -1)
-        cv.circle(frame, (350, 540), 5, GREEN, -1)
-        cv.circle(frame, (1050, 540), 5, GREEN, -1)
-        cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
-        cv.putText(frame, f'Feet: {round(distance/12.0,2)} ft', (x+5,y+30), FONTS, 0.48, LIGHT_RED, 2)
-        cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+48), FONTS, 0.48, LIGHT_RED, 2)
-        #print x
-        cv.putText(frame, f'X: {x}', (x+5,y+66), FONTS, 0.48, LIGHT_RED, 2)
+        center = int(x + d[1]/2)
+        if center > 520 and center < 920:
+            cv.rectangle(frame, (x, y-3), (x+150, y+75),BLACK,-1 )
+            #put a rectangle in the middle 1/3 of the frame (1440px wide)
+            cv.rectangle(frame, (520, 0), (920, 1080), CYAN, 2)
+            #put a point in the middle of the frame
+            # cv.circle(frame, (720, 540), 5, GREEN, -1)
+            cv.circle(frame, (350, 540), 5, GREEN, -1)
+            cv.circle(frame, (1050, 540), 5, GREEN, -1)
+            cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
+            cv.putText(frame, f'Feet: {round(distance/12.0,2)} ft', (x+5,y+30), FONTS, 0.48, GREEN, 2)
+            cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+48), FONTS, 0.48, LIGHT_RED, 2)
+            #print x
+            cv.putText(frame, f'X: {int(x + d[1]/2)}', (x+5,y+66), FONTS, 0.48, LIGHT_RED, 2)
 
 
     cv.imshow('frame',frame)
