@@ -129,9 +129,9 @@ cmd = obd.commands.SPEED
 # # get the current time
 last_time = time.time()
 
-#current speed
-current_speed = 0.0
-last_speed = 0.0
+#current velocity
+current_velocity = 0.0
+last_velocity = 0.0
 acceleration = 0.0
 
 #create an alert object
@@ -147,19 +147,19 @@ while True:
         response = connection.query(cmd)
 
         # user-friendly unit conversions
-        current_speed = float(response.value.to("mph"))
-        print(current_speed)
+        current_velocity = float(response.value.to("mph"))
+        print(current_velocity)
 
-        #random speed value for testing
-        # current_speed = random.randint(0, 100)
-        # print(current_speed)
+        #random velocity value for testing
+        # current_velocity = random.randint(0, 100)
+        # print(current_velocity)
         
         #calculate acceleration
-        acceleration = (current_speed - last_speed) / (current_time - last_time)
+        acceleration = (current_velocity - last_velocity) / (current_time - last_time)
 
         # update the last query time
         last_time = current_time
-        last_speed = current_speed
+        last_velocity = current_velocity
         
     
 
@@ -183,9 +183,9 @@ while True:
         cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
         cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+30), FONTS, 0.48, LIGHT_RED, 2)
     
-    if (acceleration > 0) and (current_speed > 0) and (distance > 0):
-        alert.pre_collision_warning(current_speed, acceleration, distance)
-    cv.putText(frame, f'Speed: {round(current_speed, 2)} mph', (10, 30), FONTS, 0.7, GREEN, 2)
+    if (acceleration > 0) and (current_velocity > 0) and (distance > 0):
+        alert.pre_collision_warning(current_velocity, acceleration, distance)
+    cv.putText(frame, f'Velocity: {round(current_velocity, 2)} mph', (10, 30), FONTS, 0.7, GREEN, 2)
     cv.putText(frame, f'Acceleration: {round(acceleration, 2)} mph/s', (10, 60), FONTS, 0.7, LIGHT_RED, 2)
     cv.imshow('frame',frame)
     

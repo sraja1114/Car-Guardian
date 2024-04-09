@@ -1,3 +1,4 @@
+import time
 import cv2 as cv 
 import numpy as np
 import scipy.interpolate as spi
@@ -123,10 +124,9 @@ while True:
     ret, frame = cap.read()
 
     data = object_detector(frame)
-    relative_velocity = 0
     center_car = []
-    distances = []
     count = 0
+    cv.rectangle(frame, (520, 0), (920, 1080), LIGHT_RED, 2)
     for d in data:
         if d[0] =='person':
             distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
@@ -148,7 +148,7 @@ while True:
         #print the distance of the car closest to the center
         if len(center_car) > 0:
             center_car = sorted(center_car, key=lambda x: abs(x[0] - 720))
-            #if two cars are within 100 pixels of each other, find the area of the bounding box
+            #if two cars are within 150 pixels of each other, find the area of the bounding box
             if len(center_car) > 1 and abs(center_car[0][0] - center_car[1][0]) < 150:
                 area1 = center_car[0][2] * center_car[0][3] * (150 - abs(720 - center_car[0][0]))
                 area2 = center_car[1][2] * center_car[1][3] * (150 - abs(720 - center_car[1][0]))
@@ -165,7 +165,6 @@ while True:
                     # print("Area 2 Larger")
                     center_car.pop(0)
             pre_collision_dist = center_car[0][1]
-            distances.append(pre_collision_dist)
             print("2", center_car)
             cv.circle(frame, (center_car[0][0], 540), 5, GREEN, 5)
             print(f"Distance: {pre_collision_dist} inches")
@@ -174,16 +173,13 @@ while True:
         if center > 520 and center < 920:
             cv.rectangle(frame, (x, y-3), (x+150, y+75),BLACK,-1 )
             #put a rectangle in the middle 1/3 of the frame (1440px wide)
-            cv.rectangle(frame, (520, 0), (920, 1080), CYAN, 2)
             #put a point in the middle of the frame
             # cv.circle(frame, (720, 540), 5, GREEN, -1)
-            cv.circle(frame, (350, 540), 5, GREEN, -1)
-            cv.circle(frame, (1050, 540), 5, GREEN, -1)
             cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
             cv.putText(frame, f'Feet: {round(distance/12.0,2)} ft', (x+5,y+30), FONTS, 0.48, GREEN, 2)
             cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+48), FONTS, 0.48, LIGHT_RED, 2)
             #print x
-            cv.putText(frame, f'X: {int(x + d[1]/2)}', (x+5,y+66), FONTS, 0.48, LIGHT_RED, 2)
+            cv.putText(frame, f'x: {int(x + d[1]/2)}', (x+5,y+66), FONTS, 0.48, LIGHT_RED, 2)
 
 
     cv.imshow('frame',frame)
