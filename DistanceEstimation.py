@@ -125,7 +125,6 @@ while True:
 
     data = object_detector(frame)
     center_car = []
-    count = 0
     cv.rectangle(frame, (520, 0), (920, 1080), LIGHT_RED, 2)
     for d in data:
         if d[0] =='person':
@@ -142,8 +141,7 @@ while True:
             if center > 520 and center < 920:
                 center = int(x + d[1]/2)
                 # cv.circle(frame, (center, 540), 5, GREEN, 3)
-                center_car.append([center, distance, d[1], d[3]])
-        count += 1 
+                center_car.append([center, distance, d[1], d[3]]) 
         
         #print the distance of the car closest to the center
         if len(center_car) > 0:
@@ -179,7 +177,7 @@ while True:
             cv.putText(frame, f'Feet: {round(distance/12.0,2)} ft', (x+5,y+30), FONTS, 0.48, GREEN, 2)
             cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+48), FONTS, 0.48, LIGHT_RED, 2)
             #print x
-            cv.putText(frame, f'x: {int(x + d[1]/2)}', (x+5,y+66), FONTS, 0.48, LIGHT_RED, 2)
+            cv.putText(frame, f'x: {center}', (x+5,y+66), FONTS, 0.48, LIGHT_RED, 2)
 
 
     cv.imshow('frame',frame)
