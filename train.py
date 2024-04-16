@@ -1,6 +1,6 @@
 import wave
 import torch
-import FocalCalculation
+import FocalCalculation as FocalCalculation
 import cv2
 import numpy as np
 from PIL import Image, ImageDraw
@@ -53,7 +53,7 @@ def predict_lights(img):
                 width = x_max - x_min
                 center = (x_min + x_max) / 2
 
-                distance = distance_finder(interpolate_focal(width), AVG_CAR_WIDTH, width)
+                distance = distance_finder(interpolate_focal(width), CAR_REF_WIDTH, width)
 
                 if center > 520 and center < 920:
                     center_car.append([center, distance, width, height])
@@ -111,6 +111,10 @@ def predict_lights(img):
                     # print("Area 2 Larger")
                     center_car.pop(0)
             pre_collision_dist = center_car[0][1]
+            draw.ellipse((center_car[0][0] - 5, 540 - 5, center_car[0][0] + 5, 540 + 5), fill="green")
+
+            #would run precollision warning here
+
             print("2", center_car)
             print(f"Distance: {pre_collision_dist} inches")
 
@@ -169,15 +173,16 @@ def process_frame(frame):
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 print(f'Using device: {device}')
 
-model = YOLO('yolov8n.onnx')
+model = YOLO('yolov8n.pt').to(device)
 
 interpolate_focal = FocalCalculation.CalculateFocalLengths()
-
 # Initialize YOLO model
 
 
 # Open webcam
 cap = cv2.VideoCapture(2)
+cap.set(3, 1440)
+cap.set(4, 1080)
 
 # print resolution of the camera
 print('Width :',cap.get(3))
@@ -190,24 +195,24 @@ else:
 
     while True:
         # Capture frame-by-frame
-            ret, frame = cap.read()
-            
-            # Check if the frame is captured successfully
-            if not ret:
-                print("Error: Unable to capture frame.")
-                break
-            
-            # Process the frame
-            processed_frame = process_frame(frame)
-            processed_frame_bgr = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
+        ret, frame = cap.read()
+        
+        # Check if the frame is captured successfully
+        if not ret:
+            print("Error: Unable to capture frame.")
+            break
+        
+        # Process the frame
+        processed_frame = process_frame(frame)
+        processed_frame_bgr = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
 
-            
-            # Display the resulting frame
-            cv2.imshow('frame', processed_frame_bgr)
-            
-            # Stop capturing when 'q' is pressed
-            if cv2.waitKey(1) & 0xFF == ord('q'):
-                break
+        
+        # Display the resulting frame
+        cv2.imshow('frame', processed_frame_bgr)
+        
+        # Stop capturing when 'q' is pressed
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
     
     # Release the VideoWriter object
 
