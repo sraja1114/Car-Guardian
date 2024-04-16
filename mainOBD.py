@@ -1,7 +1,11 @@
+import random
+import time
 import wave
 import torch
+import obd
 import FocalCalculation as FocalCalculation
 import cv2
+import Alert
 import numpy as np
 from PIL import Image, ImageDraw
 
@@ -116,8 +120,9 @@ def object_detector(img):
 
             print("2", center_car)
             print(f"Distance: {pre_collision_dist} inches")
+            return [np.array(image_pil), pre_collision_dist]
 
-        return np.array(image_pil)
+        return [np.array(image_pil), 0]
     except Exception as e:
         print("An error occurred during prediction:", e)
         return []
@@ -160,9 +165,9 @@ def process_frame(frame):
         # cropped_frame = crop_image(frame)
         
         # Call the predict_lights function to predict traffic light colors
-        new_frame = object_detector(frame)
-    
-        return new_frame
+        new_frame, distance = object_detector(frame)
+        
+        return [new_frame, distance]
     except Exception as e:
         print("An error occurred during frame processing:", e)
         return False
@@ -195,6 +200,23 @@ cap.set(4, 1080)
 print('Width :',cap.get(3))
 print('Height :',cap.get(4))
 
+# connecting to obd connection
+# connection = obd.OBD("COM3")  # replace "COM3" with your port
+
+# select an OBD command (sensor)
+# cmd = obd.commands.SPEED
+
+# # get the current time
+last_time = time.time()
+
+#current velocity
+current_velocity = 0.0
+last_velocity = 0.0
+acceleration = 0.0
+
+#create an alert object
+alert = Alert.Alert()
+
 # Check if the webcam is opened correctly
 if not cap.isOpened():
     print("Error: Unable to open webcam.")
@@ -208,12 +230,46 @@ else:
         if not ret:
             print("Error: Unable to capture frame.")
             break
+
+        # get the current time
+        current_time = time.time()
+
+        # check if 200ms have passed since the last query
+        if current_time - last_time >= 0.2:
+            # send the command, and parse the response
+            # response = connection.query(cmd)
+
+            # user-friendly unit conversions
+            # current_velocity = float(response.value.to("mph"))
+            # print(current_velocity)
+
+            #random velocity value for testing
+            current_velocity = random.randint(0, 100)
+            print(current_velocity)
+            
+            #calculate acceleration
+            acceleration = (current_velocity - last_velocity) / (current_time - last_time)
+
+            # update the last query time
+            last_time = current_time
+            last_velocity = current_velocity
+        
         
         # Process the frame
-        processed_frame = process_frame(frame)
+        processed_frame, distance = process_frame(frame)
         processed_frame_bgr = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
 
+        if (acceleration > 0) and (current_velocity > 0) and (distance > 0):
+            status = alert.pre_collision_warning(distance, current_velocity, acceleration)
+
+            #use status here for GUI
         
+        #add acceleration and velocity to the top right of the frame
+        #put a black rectangle behind the text
+        cv2.rectangle(processed_frame_bgr, (0, 0), (500, 100), (0, 0, 0), -1)
+        cv2.putText(processed_frame_bgr, f'Velocity: {round(current_velocity, 2)} mph', (10, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        cv2.putText(processed_frame_bgr, f'Acceleration: {round(acceleration, 2)} mph/s', (10, 70), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+
         # Display the resulting frame
         cv2.imshow('frame', processed_frame_bgr)
         

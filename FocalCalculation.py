@@ -23,10 +23,11 @@ BLACK =(0,0,0)
 # defining fonts 
 FONTS = cv.FONT_HERSHEY_COMPLEX
 
-device = 'cuda' if torch.cuda.is_available() else 'cpu'
-print(f'Using device: {device}')
+# device = 'cuda' if torch.cuda.is_available() else 'cpu'
+# print(f'Using device: {device}')
 
-model = YOLO('yolov8n.pt').to(device)
+# model = YOLO('yolov8n.pt').to(device)
+model = YOLO('yolov8n.pt').to('cpu')
 
 def focal_length_finder (measured_distance, real_width, width_in_rf):
         focal_length = (width_in_rf * measured_distance) / real_width
@@ -36,7 +37,7 @@ def focal_length_finder (measured_distance, real_width, width_in_rf):
 def calculate_focal(img, index):
     try:
         # Make predictions on the input image
-        results = model(img)
+        results = model.predict(img)
         
         # Assume you are interested in the first prediction
         prediction_index = 0
