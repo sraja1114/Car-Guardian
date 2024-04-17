@@ -217,6 +217,8 @@ acceleration = 0.0
 #create an alert object
 alert = Alert.Alert()
 
+stopped_distance = 0
+
 # Check if the webcam is opened correctly
 if not cap.isOpened():
     print("Error: Unable to open webcam.")
@@ -259,11 +261,23 @@ else:
         processed_frame, distance = process_frame(frame)
         processed_frame_bgr = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
 
+        if current_velocity == 0 and distance > 0:
+            stopped_distance = distance
+        
+        # Pre-collision warning
         if (acceleration > 0) and (current_velocity > 0) and (distance > 0):
             status = alert.pre_collision_warning(distance, current_velocity, acceleration)
 
             #use status here for GUI
         
+        # Traffic Alerts
+        # Car in front begins moving while stopped
+        if (current_velocity == 0) and (distance > 0) and (((distance - stopped_distance)/12) > 10):
+            alert.play_alert("Sounds/go.mp3")
+
+        # Green light appears while stopped
+        ### TO DO: Implement a check for green light
+
         #add acceleration and velocity to the top right of the frame
         #put a black rectangle behind the text
         cv2.rectangle(processed_frame_bgr, (0, 0), (500, 100), (0, 0, 0), -1)
