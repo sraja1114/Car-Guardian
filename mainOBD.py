@@ -278,7 +278,7 @@ else:
         
         # Pre-collision warning
         if (acceleration > 0) and (current_velocity > 0) and (distance > 0):
-            status = alert.pre_collision_warning(distance, current_velocity, acceleration, "low")
+            status = alert.pre_collision_warning(distance, current_velocity)
 
         #     #use status here for GUI
         
