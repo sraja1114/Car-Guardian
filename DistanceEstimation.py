@@ -1,138 +1,108 @@
-import cv2 as cv 
+import tkinter as tk
+import cv2 as cv
 import numpy as np
-import scipy.interpolate as spi
+from PIL import Image, ImageTk
+from scipy.interpolate import interp1d
 
-# Distance constants 
-REFERENCE_DISTANCES = [49, 121, 177, 241, 294.5, 353, 415]
-CAR_REF_WIDTH = 72.6 #INCHES
-KNOWN_DISTANCE = 45 #INCHES
-PERSON_WIDTH = 16 #INCHES
-
-# Object detector constant 
+# Constants
+REFERENCE_DISTANCES = [52.476, 101.22, 138.588, 177.756, 227.796, 267.396, 325.152, 390, 465.084, 532.836, 621.54, 966.264, 1291.2, 1484.76]
+CAR_REF_WIDTH = 78.6  # INCHES
+KNOWN_DISTANCE = 45  # INCHES
+PERSON_WIDTH = 16  # INCHES
 CONFIDENCE_THRESHOLD = 0.4
 NMS_THRESHOLD = 0.3
- 
-# colors for object detected
-COLORS = [(255,0,0),(255,0,255),(0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 0)]
-GREEN = (0,255,0)
+COLORS = [(255, 0, 0), (255, 0, 255), (0, 255, 255), (255, 255, 0), (0, 255, 0), (255, 0, 0)]
 LIGHT_RED = (75, 71, 255)
-CYAN = (0, 255, 255)
-WHITE = (255,255,255)
-BLACK =(0,0,0)
-# defining fonts 
 FONTS = cv.FONT_HERSHEY_COMPLEX
 
-# getting class names from classes.txt file 
-class_names = []
-with open("classes.txt", "r") as f:
-    class_names = [cname.strip() for cname in f.readlines()]
-#  setttng up opencv net
+# Load YOLO model
 yoloNet = cv.dnn.readNet('yolov4-tiny.weights', 'yolov4-tiny.cfg')
-
 yoloNet.setPreferableBackend(cv.dnn.DNN_BACKEND_CUDA)
 yoloNet.setPreferableTarget(cv.dnn.DNN_TARGET_CUDA_FP16)
-
 model = cv.dnn_DetectionModel(yoloNet)
 model.setInputParams(size=(416, 416), scale=1/255, swapRB=True)
 
-# object detector funciton /method
-def object_detector(image):
-    classes, scores, boxes = model.detect(image, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
-    # creating empty list to add objects data
-    data_list =[]
-    for (classid, score, box) in zip(classes, scores, boxes):
-        # define color of each, object based on its class id 
-        color= COLORS[int(classid) % len(COLORS)]
-    
-        label = "%s : %f" % (class_names[classid], score)
+class VideoApp:
+    def __init__(self, parent):
+        self.parent = parent
+        self.cap = cv.VideoCapture(0)
+        self.cap.set(3, 1440)
+        self.cap.set(4, 1080)
+        self.canvas = tk.Canvas(parent, width=1440, height=1080)
+        self.canvas.pack()
+        self.focal_person = None
+        self.interpolate_focal = None
+        self.update_distances()
+        self.update()
 
-        # draw rectangle on and label on object
-        cv.rectangle(image, box, color, 2)
-        cv.putText(image, label, (box[0], box[1]-14), FONTS, 0.5, color, 2)
-    
-        # getting the data 
-        # 1: class name  2: object width in pixels, 3: position where have to draw text(distance)
-        if classid ==0: # person class id 
-            data_list.append([class_names[classid], box[2], (box[0], box[1]-2)])
-        elif classid ==2:
-            data_list.append([class_names[classid], box[2], (box[0], box[1]-2)])
-        # if you want inclulde more classes then you have to simply add more [elif] statements here
-        # returning list containing the object data. 
-    return data_list
+    def update_distances(self):
+        # Read reference images and calculate focal lengths
+        ref_person = cv.imread('ReferenceImages/person.jpeg')
+        person_data = self.object_detector(ref_person)
+        person_width_in_rf = person_data[0][1]
+        self.focal_person = self.focal_length_finder(KNOWN_DISTANCE, PERSON_WIDTH, person_width_in_rf)
 
-def focal_length_finder (measured_distance, real_width, width_in_rf):
-    focal_length = (width_in_rf * measured_distance) / real_width
+        car_focal_lengths = []
+        car_widths = [1106]  # Initial width not recognized
+        car_focal_lengths.append(self.focal_length_finder(25.98, CAR_REF_WIDTH, 1106))
+        for i in range(len(REFERENCE_DISTANCES)):
+            ref_car = cv.imread('ReferenceImages/car' + str(i) + '.png')
+            car_data = self.object_detector(ref_car)
+            car_width = car_data[0][1] if len(car_data) == 1 else max(item[1] for item in car_data)
+            car_widths.append(car_width)
+            car_focal_lengths.append(self.focal_length_finder(REFERENCE_DISTANCES[i], CAR_REF_WIDTH, car_width))
+        car_widths.extend([0, 1440])  # Fillers for unknown and maximum width
+        car_focal_lengths.extend([1440, 200])  # Assumed focal lengths
+        self.interpolate_focal = interp1d(car_widths, car_focal_lengths, kind='cubic')
 
-    return focal_length
+    def update(self):
+        ret, frame = self.cap.read()
+        if ret:
+            data = self.object_detector(frame)
+            center_car = []
+            cv.rectangle(frame, (520, 0), (920, 1080), LIGHT_RED, 2)
+            for d in data:
+                if d[0] == 'person':
+                    distance = self.distance_finder(self.focal_person, PERSON_WIDTH, d[1])
+                elif d[0] == 'car' or d[0] == 'truck':
+                    distance = self.distance_finder(self.interpolate_focal(d[1]), CAR_REF_WIDTH, d[1])
+                    center = int(d[2][0] + d[1] / 2)
+                    if 520 < center < 920:
+                        center_car.append([center, distance])
+            if center_car:
+                center_car = sorted(center_car, key=lambda x: abs(x[0] - 720))
+                pre_collision_dist = center_car[0][1]
+                cv.circle(frame, (center_car[0][0], 540), 5, (0, 255, 0), 5)
+                print(f"Distance: {pre_collision_dist} inches")
+            self.photo = ImageTk.PhotoImage(image=Image.fromarray(cv.cvtColor(frame, cv.COLOR_BGR2RGB)))
+            self.canvas.create_image(0, 0, anchor=tk.NW, image=self.photo)
+        self.parent.after(10, self.update)
 
-# distance finder function 
-def distance_finder(focal_length, real_object_width, width_in_frmae):
-    distance = (real_object_width * focal_length) / width_in_frmae
-    return distance
+    def object_detector(self, image):
+        classes, scores, boxes = model.detect(image, CONFIDENCE_THRESHOLD, NMS_THRESHOLD)
+        data_list = []
+        for (classid, _, box) in zip(classes, scores, boxes):
+            color = COLORS[classid % len(COLORS)]
+            label = "%s : %f" % (class_names[classid], _)
+            cv.rectangle(image, box, color, 2)
+            cv.putText(image, label, (box[0], box[1] - 14), FONTS, 0.5, color, 2)
+            if classid in [0, 2, 7]:
+                data_list.append([class_names[classid], box[2], (box[0], box[1] - 2)])
+        return data_list
 
-# reading the reference image from dir 
-ref_person = cv.imread('ReferenceImages/person.jpeg')
-person_data = object_detector(ref_person)
-person_width_in_rf = person_data[0][1]
+    @staticmethod
+    def focal_length_finder(measured_distance, real_width, width_in_rf):
+        return (width_in_rf * measured_distance) / real_width
 
-car_focal_lengths = []
-car_widths = []
-for i in range(len(REFERENCE_DISTANCES)):
-    ref_car = cv.imread('ReferenceImages/car' + str(i) + '.png')
-    car_data = object_detector(ref_car)
+    @staticmethod
+    def distance_finder(focal_length, real_object_width, width_in_frame):
+        return (real_object_width * focal_length) / width_in_frame
 
-    # ignore objects in the background
-    car_width = car_data[0][1]
-    if len(car_data) > 1:
-        car_width = max(item[1] for item in car_data)
-    car_widths.append(car_width)
+def main():
+    root = tk.Tk()
+    root.title("Car Guardian")
+    video_app = VideoApp(root)
+    root.mainloop()
 
-    print(f"Car {i} width in pixels: {car_width} - Distance: {REFERENCE_DISTANCES[i]} inches")
-    car_focal_lengths.append(focal_length_finder(REFERENCE_DISTANCES[i], CAR_REF_WIDTH, car_width))
-
-# add filler values for when at 0 pixels and 1440 pixels
-# assume average focal length at far distances and 500 at close distances
-car_widths.append(0)
-car_focal_lengths.append(1130)
-car_widths.append(1440)
-car_focal_lengths.append(500)
-
-# interpolate the focal lengths
-interpolate_focal = spi.interp1d(car_widths, car_focal_lengths, kind='cubic')
-
-# finding person focal length
-print(f"Person width in pixels : {person_width_in_rf}")
-focal_person = focal_length_finder(KNOWN_DISTANCE, PERSON_WIDTH, person_width_in_rf)
-
-# finding car focal length
-print(f"Focal length for cars: {car_focal_lengths}")
-focal_car = np.average(car_focal_lengths)
-
-cap = cv.VideoCapture(2)
-cap.set(3, 1440)
-cap.set(4, 1080)
-
-while True:
-    ret, frame = cap.read()
-
-    data = object_detector(frame) 
-    for d in data:
-        if d[0] =='person':
-            distance = distance_finder(focal_person, PERSON_WIDTH, d[1])
-            x, y = d[2]
-        elif d[0] =='car':
-            distance = distance_finder (interpolate_focal(d[1]), CAR_REF_WIDTH, d[1])
-            #distance = distance_finder (focal_car, CAR_REF_WIDTH, d[1])
-            x, y = d[2]
-        cv.rectangle(frame, (x, y-3), (x+150, y+40),BLACK,-1 )
-        cv.putText(frame, f'Dis: {round(distance,2)} inches', (x+5,y+13), FONTS, 0.48, GREEN, 2)
-        cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+30), FONTS, 0.48, LIGHT_RED, 2)
-
-    cv.imshow('frame',frame)
-    
-    key = cv.waitKey(1)
-    if key ==ord('q'):
-        break
-cv.destroyAllWindows()
-cap.release()
-
+if __name__ == "__main__":
+    main()
