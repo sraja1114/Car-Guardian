@@ -82,22 +82,28 @@ def object_detector(img):
                 # Count the number of pixels for each color using HSV
                 red_pixels, yellow_pixels, green_pixels = count_hsv_pixels(np.array(cropped_img))
                 
+                current_color = "unknown"
                 
                 # Compare the counts to determine the traffic light color
                 if red_pixels > green_pixels and red_pixels > yellow_pixels:
                     predictions.append(["red", center])
+                    current_color = "red"
                     print("Traffic light color: Red", red_pixels, green_pixels, yellow_pixels)
                 elif green_pixels > red_pixels and green_pixels > yellow_pixels:
                     predictions.append(["green", center])
+                    current_color = "green"
                     print("Traffic light color: Green", red_pixels, green_pixels, yellow_pixels)
                 elif yellow_pixels > red_pixels and yellow_pixels > green_pixels:
                     predictions.append(["yellow", center])
+                    current_color = "yellow"
                     print("Traffic light color: Yellow", red_pixels, green_pixels, yellow_pixels)
                 else:
                     print("Unable to determine traffic light color")
 
                 draw.rectangle([(x_min, y_min), (x_max, y_max)], outline="red", width=2)
+                draw.rectangle([(x_min, y_min - 20), (x_max, y_min)], fill=(0, 0, 0))
                 draw.text((x_min, y_min - 10), model.names[int(box[1].cls)], fill=(255, 255, 255))
+                draw.text((x_min, y_min - 20), current_color, fill=(255, 255, 255))
 
         # Set color equal to the center most traffic light from predictions
         if len(predictions) > 0:
