@@ -1,10 +1,12 @@
 import random
-import Alert
-import obd
 import time
-import cv2 as cv 
+
+import cv2 as cv
 import numpy as np
+import obd
 import scipy.interpolate as spi
+
+import Alert
 
 # Distance constants 
 REFERENCE_DISTANCES = [49, 121, 177, 241, 294.5, 353, 415]
@@ -184,7 +186,7 @@ while True:
         cv.putText(frame, f'Width: {round(d[1],2)} pixels', (x+5,y+30), FONTS, 0.48, LIGHT_RED, 2)
     
     if (acceleration > 0) and (current_velocity > 0) and (distance > 0):
-        alert.pre_collision_warning(current_velocity, acceleration, distance)
+        alert.pre_collision_warning(current_velocity, distance)
     cv.putText(frame, f'Velocity: {round(current_velocity, 2)} mph', (10, 30), FONTS, 0.7, GREEN, 2)
     cv.putText(frame, f'Acceleration: {round(acceleration, 2)} mph/s', (10, 60), FONTS, 0.7, LIGHT_RED, 2)
     cv.imshow('frame',frame)
