@@ -49,6 +49,8 @@ def object_detector(img):
         prediction_boxes = zip(results[prediction_index].boxes.xyxy, results[prediction_index].boxes)
 
         center_car = []
+        pre_collision_dist = 0
+        color = "none"
 
         for box in prediction_boxes:
             if (int(box[1].cls) == 2) or (int(box[1].cls) == 7):
@@ -72,6 +74,7 @@ def object_detector(img):
 
             elif int(box[1].cls) == 9:  # Assuming class 9 corresponds to traffic light
                 x_min, y_min, x_max, y_max = map(int, box[0])
+                center = (x_min + x_max) / 2
 
                 # Crop the region
                 cropped_img = image_pil.crop((x_min, y_min, x_max, y_max))
@@ -82,20 +85,24 @@ def object_detector(img):
                 
                 # Compare the counts to determine the traffic light color
                 if red_pixels > green_pixels and red_pixels > yellow_pixels:
-                    predictions.append("red")
+                    predictions.append(["red", center])
                     print("Traffic light color: Red", red_pixels, green_pixels, yellow_pixels)
                 elif green_pixels > red_pixels and green_pixels > yellow_pixels:
-                    predictions.append("green")
+                    predictions.append(["green", center])
                     print("Traffic light color: Green", red_pixels, green_pixels, yellow_pixels)
                 elif yellow_pixels > red_pixels and yellow_pixels > green_pixels:
-                    predictions.append("yellow")
+                    predictions.append(["yellow", center])
                     print("Traffic light color: Yellow", red_pixels, green_pixels, yellow_pixels)
                 else:
                     print("Unable to determine traffic light color")
 
                 draw.rectangle([(x_min, y_min), (x_max, y_max)], outline="red", width=2)
                 draw.text((x_min, y_min - 10), model.names[int(box[1].cls)], fill=(255, 255, 255))
-               
+
+        # Set color equal to the center most traffic light from predictions
+        if len(predictions) > 0:
+            predictions = sorted(predictions, key=lambda x: abs(x[1] - 720))
+            color = predictions[0][0]       
 
         if len(center_car) > 0:
             center_car = sorted(center_car, key=lambda x: abs(x[0] - 720))
@@ -120,9 +127,9 @@ def object_detector(img):
 
             print("2", center_car)
             print(f"Distance: {pre_collision_dist} inches")
-            return [np.array(image_pil), pre_collision_dist]
+            return [np.array(image_pil), pre_collision_dist, color]
 
-        return [np.array(image_pil), 0]
+        return [np.array(image_pil), 0, color]
     except Exception as e:
         print("An error occurred during prediction:", e)
         return []
@@ -165,25 +172,25 @@ def process_frame(frame):
         # cropped_frame = crop_image(frame)
         
         # Call the predict_lights function to predict traffic light colors
-        new_frame, distance = object_detector(frame)
+        new_frame, distance, color = object_detector(frame)
         
-        return [new_frame, distance]
+        return [new_frame, distance, color]
     except Exception as e:
         print("An error occurred during frame processing:", e)
         return False
 
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# print('Using device:', device)
-# print()
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print('Using device:', device)
+print()
 
 # #Additional Info when using cuda
-# if device.type == 'cuda':
-#     print(torch.cuda.get_device_name(0))
-#     print('Memory Usage:')
-#     print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
-#     print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
+if device.type == 'cuda':
+    print(torch.cuda.get_device_name(0))
+    print('Memory Usage:')
+    print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
+    print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
 
-model = YOLO('yolov8n.pt').to('cpu')
+model = YOLO('yolov8n.pt').to(device)
 
 
 
@@ -218,6 +225,8 @@ acceleration = 0.0
 alert = Alert.Alert()
 
 stopped_distance = 0
+stopped_distance_taken = True
+velocities = []
 
 # Check if the webcam is opened correctly
 if not cap.isOpened():
@@ -237,17 +246,20 @@ else:
         current_time = time.time()
 
         # check if 200ms have passed since the last query
-        if current_time - last_time >= 0.2:
+        if current_time - last_time >= 0.1:
             # send the command, and parse the response
             # response = connection.query(cmd)
 
             # user-friendly unit conversions
-            # current_velocity = float(response.value.to("mph"))
+            # current_velocity = response.value.to("mph").magnitude
             # print(current_velocity)
 
             #random velocity value for testing
-            current_velocity = random.randint(0, 100)
+            current_velocity = random.randint(0, 0)
             print(current_velocity)
+
+            #add the current velocity to the list of velocities
+            velocities.append(current_velocity)
             
             #calculate acceleration
             acceleration = (current_velocity - last_velocity) / (current_time - last_time)
@@ -258,17 +270,17 @@ else:
         
         
         # Process the frame
-        processed_frame, distance = process_frame(frame)
+        processed_frame, distance, color = process_frame(frame)
         processed_frame_bgr = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
 
-        if current_velocity == 0 and distance > 0:
+        if current_velocity == 0 and distance > 0 and stopped_distance_taken == False:
             stopped_distance = distance
         
         # Pre-collision warning
         if (acceleration > 0) and (current_velocity > 0) and (distance > 0):
-            status = alert.pre_collision_warning(distance, current_velocity, acceleration)
+            status = alert.pre_collision_warning(distance, current_velocity, acceleration, "low")
 
-            #use status here for GUI
+        #     #use status here for GUI
         
         # Traffic Alerts
         # Car in front begins moving while stopped
@@ -276,7 +288,12 @@ else:
             alert.play_alert("Sounds/go.mp3")
 
         # Green light appears while stopped
-        ### TO DO: Implement a check for green light
+        if (current_velocity == 0) and (color == "green"):
+            alert.play_alert("Sounds/go.mp3")
+
+        # Reset stopped distance boolean when moving
+        if (current_velocity != 0):
+            stopped_distance_taken = False
 
         #add acceleration and velocity to the top right of the frame
         #put a black rectangle behind the text
@@ -289,6 +306,10 @@ else:
         
         # Stop capturing when 'q' is pressed
         if cv2.waitKey(1) & 0xFF == ord('q'):
+            # write all of the velocities to a text file
+            with open("velocities.txt", "w") as file:
+                for velocity in velocities:
+                    file.write(f"{velocity}\n")
             break
     
     # Release the VideoWriter object

@@ -23,11 +23,10 @@ BLACK =(0,0,0)
 # defining fonts 
 FONTS = cv.FONT_HERSHEY_COMPLEX
 
-# device = 'cuda' if torch.cuda.is_available() else 'cpu'
-# print(f'Using device: {device}')
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
+print(f'Using device: {device}')
 
-# model = YOLO('yolov8n.pt').to(device)
-model = YOLO('yolov8n.pt').to('cpu')
+model = YOLO('yolov8n.pt').to(device)
 
 def focal_length_finder (measured_distance, real_width, width_in_rf):
         focal_length = (width_in_rf * measured_distance) / real_width
