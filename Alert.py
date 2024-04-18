@@ -30,5 +30,7 @@ class Alert:
             print(f"Estimated stopping time: {stopping_time} seconds")
             # Play a sound
             self.play_alert("Sounds/forward_collision_warning.mp3")
+            return True
         else:
             print("No obstacles detected within stopping distance.")
+            return False

@@ -66,7 +66,6 @@ def object_detector(image):
 
 def focal_length_finder (measured_distance, real_width, width_in_rf):
     focal_length = (width_in_rf * measured_distance) / real_width
-
     return focal_length
 
 # distance finder function 
@@ -139,7 +138,6 @@ while True:
             # if x is between 400 and 1000 then append the distance to the center_car list
             center = int(x + d[1]/2)
             if center > 520 and center < 920:
-                center = int(x + d[1]/2)
                 # cv.circle(frame, (center, 540), 5, GREEN, 3)
                 center_car.append([center, distance, d[1], d[3]]) 
         
