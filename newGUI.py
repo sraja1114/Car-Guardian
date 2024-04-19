@@ -1,65 +1,91 @@
+import threading
 import tkinter as tk
+import pyaudio
+import wave
 import cv2 as cv
-from PIL import Image, ImageTk
 import os
+from PIL import Image, ImageTk
 from collections import deque
 from datetime import datetime
-from moviepy.editor import VideoFileClip, concatenate_videoclips
+from moviepy.editor import VideoFileClip
 from moviepy.editor import AudioFileClip
-from moviepy.editor import concatenate_audioclips
-
 from pyffmpeg import FFmpeg
 
 
 class VideoApp:
     def __init__(self, parent):
         self.parent = parent
-        self.video_source = 0
+        self.video_source = 2
         self.vid = cv.VideoCapture(self.video_source)
-        self.canvas = tk.Canvas(parent, width=self.vid.get(cv.CAP_PROP_FRAME_WIDTH), height=self.vid.get(cv.CAP_PROP_FRAME_HEIGHT))
+        self.vid.set(cv.CAP_PROP_FRAME_WIDTH, 1440)
+        self.vid.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
+        self.canvas = tk.Canvas(parent, width=640, height=480)  # Set canvas size to 640x480
         self.canvas.pack()
-        self.recording = True  # Start recording automatically
-        self.record_buffer = deque(maxlen=200)  # Buffer to store last 10 seconds of frames
-        self.audio_buffer = []  # List to store audio clips
+        self.recording = True
+        self.record_buffer = deque()  # Buffer to store last 10 seconds of frames
+        self.audio_buffer = []  # List to store audio frames
+        self.audio_thread = threading.Thread(target=self.record_audio)
+        self.audio_thread.start()  # Start the audio recording thread
         self.update()
 
+
+    def record_audio(self):
+        p = pyaudio.PyAudio()
+        chunk = 1024
+        sample_format = pyaudio.paInt16
+        channels = 1
+        fs = 44100
+        stream = p.open(format=sample_format,
+                        channels=channels,
+                        rate=fs,
+                        frames_per_buffer=chunk,
+                        input=True)
+        while True:
+            data = stream.read(chunk)
+            self.audio_buffer.append(data)
+    
     def update(self):
         ret, frame = self.vid.read()
         if ret:
+            # Resize the frame to fit 640x480
+            frame = cv.resize(frame, (640, 480))
             self.photo = ImageTk.PhotoImage(image=Image.fromarray(cv.cvtColor(frame, cv.COLOR_BGR2RGB)))
             self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
             if self.recording:
+                # Resize the frame back to original resolution for recording
+                frame = cv.resize(frame, (1440, 1080))
                 self.record_buffer.append(frame)
-                # Capture audio frame
-                ret, audio_frame = self.vid.read()  # Assuming audio is recorded along with video
-                if ret:
-                    self.audio_buffer.append(audio_frame)
         self.parent.after(10, self.update)
 
     def toggle_recording(self):
         self.recording = not self.recording
         if not self.recording:
-            self.save_video_segment()
+            threading.Thread(target=self.save_video_segment).start()
 
     def save_video_segment(self):
         if len(self.record_buffer) > 0 and len(self.audio_buffer) > 0:
             current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # Get current time as a string
             video_filename = f'Saved Videos/{current_time}_video.mp4'  # Video filename with timestamp
-            audio_filename = f'Saved Videos/{current_time}_audio.mp3'  # Audio filename with timestamp
+            audio_filename = f'Saved Videos/{current_time}_audio.wav'  # Audio filename with timestamp
 
             # Write video frames to a temporary video file
-            out = cv.VideoWriter(video_filename, cv.VideoWriter_fourcc(*'mp4v'), 20.0, (int(self.vid.get(cv.CAP_PROP_FRAME_WIDTH)), int(self.vid.get(cv.CAP_PROP_FRAME_HEIGHT))))
+            out = cv.VideoWriter(video_filename, cv.VideoWriter_fourcc(*'mp4v'), 60.0, (1440, 1080))  # Adjust resolution here
             for frame in self.record_buffer:
                 out.write(frame)
             out.release()
 
-            # Write audio clips to a temporary audio file
-            final_audio = concatenate_audioclips(self.audio_buffer)
-            final_audio.write_audiofile(audio_filename)
+            # Write audio frames to a temporary audio file
+            wf = wave.open(audio_filename, 'wb')
+            wf.setnchannels(1)
+            wf.setsampwidth(pyaudio.PyAudio().get_sample_size(pyaudio.paInt16))
+            wf.setframerate(44100)
+            wf.writeframes(b''.join(self.audio_buffer))
+            wf.close()
 
             # Merge video and audio files
-            video_clip = VideoFileClip(video_filename)
-            video_clip.audio = AudioFileClip(audio_filename)
+            video_clip = VideoFileClip(video_filename)  # Specify fps explicitly
+            audio_clip = AudioFileClip(audio_filename)
+            video_clip = video_clip.set_audio(audio_clip)
             video_clip.write_videofile(f'Saved Videos/{current_time}.mp4', codec='libx264', audio_codec='aac')
 
             # Clean up temporary files
@@ -68,7 +94,7 @@ class VideoApp:
 
             self.record_buffer.clear()
             self.audio_buffer.clear()
-            print("Video segment saved successfully as:", {current_time})
+            print(f"Video segment saved successfully as: {current_time}.mp4")
 
 
 def Sensitivity_change(button):
