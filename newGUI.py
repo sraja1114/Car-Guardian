@@ -19,7 +19,7 @@ class VideoApp:
         self.vid = cv.VideoCapture(self.video_source)
         self.vid.set(cv.CAP_PROP_FRAME_WIDTH, 1440)
         self.vid.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
-        self.canvas = tk.Canvas(parent, width=640, height=480)  # Set canvas size to 640x480
+        self.canvas = tk.Canvas(parent, width=640, height=480, bg='#2b2b2b', highlightthickness=0)  # Set canvas size to 640x480 and dark gray background, remove highlight thickness
         self.canvas.pack()
         self.recording = True
         self.record_buffer = deque()  # Buffer to store last 10 seconds of frames
@@ -147,15 +147,15 @@ def dashcam_switch():
 
     # Display each video entry in a card format
     for file in all_files:
-        video_entry_frame = tk.Frame(video_frame, bg="white", bd=1, relief=tk.RAISED)
+        video_entry_frame = tk.Frame(video_frame, bg="#444444", bd=0)  # Use darker gray background and remove border
         video_entry_frame.pack(fill=tk.BOTH, padx=5, pady=5)
 
         # Load video thumbnail (you need to implement this)
-        thumbnail_label = tk.Label(video_entry_frame, text="Thumbnail", bg="gray", width=10, height=5)
+        thumbnail_label = tk.Label(video_entry_frame, text="", bg="#333333", width=10, height=5)  # Use darker gray background
         thumbnail_label.pack(side=tk.LEFT, padx=5, pady=5)
 
         # Display video filename
-        filename_label = tk.Label(video_entry_frame, text=file, font=("Arial", 10))
+        filename_label = tk.Label(video_entry_frame, text=file, font=("Arial", 10), bg="#444444", fg="white")  # Use darker gray background and white text
         filename_label.pack(side=tk.TOP, pady=(5, 0))
 
         # Bind click event to open the video
@@ -183,12 +183,13 @@ def settings_open():
 def main():
     root = tk.Tk()
     root.title("Car Guardian")
+    root.configure(bg='#2b2b2b')  # Set background color to dark gray
 
     # Create frames for video and buttons
-    video_frame = tk.Frame(root, bg="black")
+    video_frame = tk.Frame(root, bg="#2b2b2b")  # Use dark gray background
     video_frame.grid(row=0, column=0, padx=10, pady=10)
 
-    button_frame = tk.Frame(root)
+    button_frame = tk.Frame(root, bg="#2b2b2b")  # Use dark gray background
     button_frame.grid(row=0, column=1, padx=10, pady=10)
 
     # Create a label widget
@@ -199,25 +200,25 @@ def main():
     image = image.subsample(2)  # Adjust the subsample value to change the size
 
     # Create the label widget with both text and image
-    label = tk.Label(button_frame, text="I love Car Guardian <3", image=image, compound=tk.TOP, font=("Arial", 12))
+    label = tk.Label(button_frame, text="Car Guardian", image=image, compound=tk.TOP, font=("Arial", 12), bg='#2b2b2b', fg='white')  # Set text color to white
     label.grid(row=0, column=0, pady=(10, 30), sticky="n")  # Place the label using grid layout manager
 
 
     # Create buttons
-    Sens_button = tk.Button(button_frame, text="High", command=lambda: Sensitivity_change(Sens_button), width=20, height=2, font=("Arial", 10))
+    Sens_button = tk.Button(button_frame, text="High", command=lambda: Sensitivity_change(Sens_button), width=20, height=2, font=("Arial", 10), bg='#666666', fg='white', bd=0, highlightthickness=0)  # Use darker gray background and white text, remove border and highlight
     Sens_button.grid(row=1, column=0, pady=(0, 10))
 
-    dashcam_button = tk.Button(button_frame, text="Dashcam", command=dashcam_switch, width=20, height=2, font=("Arial", 10))
+    dashcam_button = tk.Button(button_frame, text="Dashcam", command=dashcam_switch, width=20, height=2, font=("Arial", 10), bg='#666666', fg='white', bd=0, highlightthickness=0)  # Use darker gray background and white text, remove border and highlight
     dashcam_button.grid(row=2, column=0, pady=(0, 10))
 
-    settings_button = tk.Button(button_frame, text="Settings", command=settings_open, width=20, height=2, font=("Arial", 10))
+    settings_button = tk.Button(button_frame, text="Settings", command=settings_open, width=20, height=2, font=("Arial", 10), bg='#666666', fg='white', bd=0, highlightthickness=0)  # Use darker gray background and white text, remove border and highlight
     settings_button.grid(row=3, column=0, pady=(0, 10))
 
     # Create and run the video app
     video_app = VideoApp(video_frame)
 
     # Button to start/stop recording
-    record_button = tk.Button(button_frame, text="Record", command=video_app.toggle_recording, width=20, height=2, font=("Arial", 10))
+    record_button = tk.Button(button_frame, text="Record", command=video_app.toggle_recording, width=20, height=2, font=("Arial", 10), bg='#666666', fg='white', bd=0, highlightthickness=0)  # Use darker gray background and white text, remove border and highlight
     record_button.grid(row=4, column=0, pady=(0, 10))
 
     # Run the main event loop
