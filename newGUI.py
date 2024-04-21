@@ -21,7 +21,8 @@ class VideoApp:
         self.vid = cv.VideoCapture(self.video_source)
         self.vid.set(cv.CAP_PROP_FRAME_WIDTH, 1440)
         self.vid.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
-        self.canvas = tk.Canvas(parent, width=640, height=480, bg='#2b2b2b', highlightthickness=0)  # Set canvas size to 640x480 and dark gray background, remove highlight thickness
+        self.canvas = tk.Canvas(parent, width=800, height=600, bg='#2b2b2b', highlightthickness=0)  # Set canvas size to 800x600 and dark gray background, remove highlight thickness
+        # Set canvas size to 640x480 and dark gray background, remove highlight thickness
         self.canvas.pack()
         self.recording = True
         self.record_buffer = deque()  # Buffer to store last 10 seconds of frames
@@ -53,7 +54,7 @@ class VideoApp:
         ret, frame = self.vid.read()
         if ret:
             # Resize the frame to fit 640x480
-            frame = cv.resize(frame, (640, 480))
+            frame = cv.resize(frame, (800, 600))
             self.photo = ImageTk.PhotoImage(image=Image.fromarray(cv.cvtColor(frame, cv.COLOR_BGR2RGB)))
             self.canvas.create_image(0, 0, image=self.photo, anchor=tk.NW)
             if self.recording:
