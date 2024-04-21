@@ -13,9 +13,11 @@ from pyffmpeg import FFmpeg
 
 
 class VideoApp:
+    record_buffer_size = 36000  # Assuming 60 frames per second for 10 minutes
+
     def __init__(self, parent):
         self.parent = parent
-        self.video_source = 2
+        self.video_source = 0
         self.vid = cv.VideoCapture(self.video_source)
         self.vid.set(cv.CAP_PROP_FRAME_WIDTH, 1440)
         self.vid.set(cv.CAP_PROP_FRAME_HEIGHT, 1080)
@@ -27,7 +29,8 @@ class VideoApp:
         self.audio_thread = threading.Thread(target=self.record_audio)
         self.audio_thread.start()  # Start the audio recording thread
         self.update()
-
+        self.record_buffer_size = 3600  # 60 seconds, 60fps
+        self.record_buffer = deque(maxlen=self.record_buffer_size) #destroy old buffer frames
 
     def record_audio(self):
         p = pyaudio.PyAudio()
@@ -43,6 +46,8 @@ class VideoApp:
         while True:
             data = stream.read(chunk)
             self.audio_buffer.append(data)
+            if len(self.audio_buffer) > VideoApp.record_buffer_size:
+                self.audio_buffer.pop(0)  # Remove the oldest audio chunk
     
     def update(self):
         ret, frame = self.vid.read()
@@ -63,14 +68,19 @@ class VideoApp:
             threading.Thread(target=self.save_video_segment).start()
 
     def save_video_segment(self):
-        if len(self.record_buffer) > 0 and len(self.audio_buffer) > 0:
+        # Create copies of the record_buffer and audio_buffer to avoid modifying them during iteration
+        record_buffer_copy = list(self.record_buffer)
+        audio_buffer_copy = self.audio_buffer.copy()
+
+        if len(record_buffer_copy) > 0 and len(audio_buffer_copy) > 0:
             current_time = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")  # Get current time as a string
             video_filename = f'Saved Videos/{current_time}_video.mp4'  # Video filename with timestamp
             audio_filename = f'Saved Videos/{current_time}_audio.wav'  # Audio filename with timestamp
 
             # Write video frames to a temporary video file
-            out = cv.VideoWriter(video_filename, cv.VideoWriter_fourcc(*'mp4v'), 60.0, (1440, 1080))  # Adjust resolution here
-            for frame in self.record_buffer:
+            out = cv.VideoWriter(video_filename, cv.VideoWriter_fourcc(*'mp4v'), 60.0,
+                                 (1440, 1080))  # Adjust resolution here
+            for frame in record_buffer_copy:
                 out.write(frame)
             out.release()
 
@@ -79,7 +89,7 @@ class VideoApp:
             wf.setnchannels(1)
             wf.setsampwidth(pyaudio.PyAudio().get_sample_size(pyaudio.paInt16))
             wf.setframerate(44100)
-            wf.writeframes(b''.join(self.audio_buffer))
+            wf.writeframes(b''.join(audio_buffer_copy))
             wf.close()
 
             # Merge video and audio files
