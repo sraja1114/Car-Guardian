@@ -13,7 +13,6 @@ from pyffmpeg import FFmpeg
 
 
 class VideoApp:
-    record_buffer_size = 36000  # Assuming 60 frames per second for 10 minutes
 
     def __init__(self, parent):
         self.parent = parent
@@ -27,11 +26,11 @@ class VideoApp:
         self.recording = True
         self.record_buffer = deque()  # Buffer to store last 10 seconds of frames
         self.audio_buffer = []  # List to store audio frames
+        self.record_buffer_size = 1800  # 60 seconds, 60fps
+        self.record_buffer = deque(maxlen=self.record_buffer_size)  # destroy old buffer frames
         self.audio_thread = threading.Thread(target=self.record_audio)
         self.audio_thread.start()  # Start the audio recording thread
         self.update()
-        self.record_buffer_size = 3600  # 60 seconds, 60fps
-        self.record_buffer = deque(maxlen=self.record_buffer_size) #destroy old buffer frames
 
     def record_audio(self):
         p = pyaudio.PyAudio()
@@ -61,6 +60,7 @@ class VideoApp:
                 # Resize the frame back to original resolution for recording
                 frame = cv.resize(frame, (1440, 1080))
                 self.record_buffer.append(frame)
+                print(len(self.record_buffer))
         self.parent.after(10, self.update)
 
     def toggle_recording(self):
@@ -79,7 +79,7 @@ class VideoApp:
             audio_filename = f'Saved Videos/{current_time}_audio.wav'  # Audio filename with timestamp
 
             # Write video frames to a temporary video file
-            out = cv.VideoWriter(video_filename, cv.VideoWriter_fourcc(*'mp4v'), 60.0,
+            out = cv.VideoWriter(video_filename, cv.VideoWriter_fourcc(*'mp4v'), 30.0,
                                  (1440, 1080))  # Adjust resolution here
             for frame in record_buffer_copy:
                 out.write(frame)
