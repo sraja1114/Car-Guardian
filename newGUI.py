@@ -46,7 +46,7 @@ class VideoApp:
         while True:
             data = stream.read(chunk)
             self.audio_buffer.append(data)
-            if len(self.audio_buffer) > VideoApp.record_buffer_size:
+            if len(self.audio_buffer) > self.record_buffer_size:
                 self.audio_buffer.pop(0)  # Remove the oldest audio chunk
     
     def update(self):
@@ -60,7 +60,7 @@ class VideoApp:
                 # Resize the frame back to original resolution for recording
                 frame = cv.resize(frame, (1440, 1080))
                 self.record_buffer.append(frame)
-                print(len(self.record_buffer))
+                # print(len(self.record_buffer))
         self.parent.after(10, self.update)
 
     def toggle_recording(self):
