@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 import os
 import webbrowser
+import datetime, time
 
 app = Flask(__name__)
 
@@ -25,6 +26,33 @@ def open():
     
     webbrowser.open_new_tab(downloads_folder)
     return jsonify({"message": "Opened downloads folder"})
+
+@app.route('/record', methods=['POST'])
+def precollision():
+    body_data = request.get_json()
+    data_type = body_data.get('type')
+    
+    downloads_folder = os.path.expanduser("~/Downloads")
+    downloads_list = os.listdir(downloads_folder)
+    downloads_count_initial = len(downloads_list)
+    start_time = datetime.now()
+    
+    
+    
+    for i in range(120): #monitorp downloads folder for new files, timeout after 120 seconds
+        downloads_list = os.listdir(downloads_folder)
+        downloads_count_new = len(downloads_list)
+        new_files = [f for f in downloads_count_new if f not in downloads_count_initial]
+        if new_files:
+            
+            new_file_name = new_files[0] # new file added in the meantime - should be newly saved file
+            print(new_file_name)
+            break
+            
+        time.sleep(1)
+    
+    
+    return jsonify({"message": "Successfully moved file due to " + data_type})
 
 
 if __name__ == '__main__':
