@@ -1,14 +1,13 @@
 import React from "react";
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import NavigationBar from "./Components/NavBar/NavBar";
 import "./index.css";
 import Landing from "./Pages/Landing/Landing";
 
 const App = () => {
   return (
     <div>
-      <NavigationBar />
+      {/* <NavigationBar /> */}
       <Routes>
         <Route path="/" element={<Landing />} />
       </Routes>
