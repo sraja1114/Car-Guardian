@@ -1,0 +1,21 @@
+.button-list-container {
+    text-align: right;
+    margin-left: 170px;
+}
+
+.button-list-container button {
+width: 200px;
+height: 50px;
+margin-bottom: 200px;
+}
+
+.my-image {
+    width: 200px;
+    height: auto;
+    margin-right: 60px;
+  }
+
+.MuiButton-label {
+    color: white;
+    color: #333;
+}
