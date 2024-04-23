@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 
 import { fetchGet, fetchPost } from '../../util/fetchHelp.js';
 
-import WebcamComponent from '../../Components/NavBar/Webcam.js';
+import ButtonList from '../../Components/ButtonList/ButtonList.js';
+import WebcamComponent from '../../Components/Webcam/Webcam.js';
 import './Landing.css';
 function Landing() {
   const [getData, setGetData] = useState()
@@ -38,7 +39,11 @@ function Landing() {
           <p>{postData}</p>
         </>
       )}
-      <WebcamComponent/>
+      <div className='WebcamContainer'>
+        <WebcamComponent/>
+        <ButtonList/>
+      </div>
+      
     </div>
   );
 }
