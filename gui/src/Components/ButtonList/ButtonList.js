@@ -4,6 +4,7 @@ import * as React from 'react';
 import { useState } from 'react'; // Import useState
 import { fetchPost } from '../../util/fetchHelp.js';
 import "./ButtonList.css";
+import myImage from './logo.png';
 export default function ButtonList() {
   const HLM = ["Low", "Medium", "High"]
   const [sensitivity, setSensitivity] = useState(0);
@@ -32,10 +33,18 @@ export default function ButtonList() {
   
 
   return (
+    
+    <>
+    <div className="button-list-container"> {/* Use the CSS class */}
+    <div>
+      <img src={myImage} alt="My Image" className="my-image" />
+    </div>
     <Stack spacing={3} direction="column">
       <Button variant="outlined" onClick={handleOpenFiles}>Open Files</Button>
       <Button variant="outlined" onClick={handleSaveLast30Seconds}>Save last 30 seconds</Button>
       <Button variant="outlined" onClick={handleSensitivityChange}>{HLM[sensitivity]}</Button>
     </Stack>
+    </div>
+    </>
   );
 }
