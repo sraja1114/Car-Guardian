@@ -5,6 +5,7 @@ const WebcamComponent = () => {
   const [recording, setRecording] = useState(false);
   const [recordedChunks, setRecordedChunks] = useState([]);
   const [timerId, setTimerId] = useState(null);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
 
   useEffect(() => {
     const constraints = { video: true, audio: true };
@@ -58,7 +59,7 @@ const WebcamComponent = () => {
     // Automatically stop recording after 10 seconds
     const timer = setTimeout(() => {
       mediaRecorder.stop();
-    }, 10000);
+    }, 60000);
 
     setTimerId(timer);
   };
@@ -75,10 +76,13 @@ const WebcamComponent = () => {
     const videoURL = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = videoURL;
-    a.download = 'webcam_recording.webm';
+    const recording_name = `${new Date().toJSON().slice(0,19)}.mp4`;
+    a.download = recording_name;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(videoURL);
+
+    startRecording();
   };
 
   return (
