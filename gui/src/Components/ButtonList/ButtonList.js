@@ -5,9 +5,9 @@ import * as React from 'react';
 export default function ButtonList() {
   return (
     <Stack spacing={3} direction="column">
-      <Button variant="outlined">Outlined</Button>
-      <Button variant="outlined">Outlined</Button>
-      <Button variant="outlined">Outlined</Button>
+      <Button variant="outlined">Open Files</Button>
+      <Button variant="outlined">Save last 30 seconds</Button>
+      <Button variant="outlined">Sensitivity</Button>
     </Stack>
   );
 }
