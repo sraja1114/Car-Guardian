@@ -40,9 +40,9 @@ export default function ButtonList() {
       <img src={myImage} alt="My Image" className="my-image" />
     </div>
     <Stack spacing={3} direction="column">
-      <Button variant="outlined" onClick={handleOpenFiles}>Open Files</Button>
-      <Button variant="outlined" onClick={handleSaveLast30Seconds}>Save last 30 seconds</Button>
-      <Button variant="outlined" onClick={handleSensitivityChange}>{HLM[sensitivity]}</Button>
+      <Button variant="outlined" class="MuiButton-label" onClick={handleOpenFiles}>Open Files</Button>
+      <Button variant="outlined" class="MuiButton-label" onClick={handleSaveLast30Seconds}>Save last 30 seconds</Button>
+      <Button variant="outlined" class="MuiButton-label" onClick={handleSensitivityChange}>{HLM[sensitivity]}</Button>
     </Stack>
     </div>
     </>
