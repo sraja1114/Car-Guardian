@@ -1,6 +1,7 @@
 from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+currentSensitivity = "High"
 
 # example get request
 @app.route('/default_greet')
@@ -20,10 +21,16 @@ def greet():
 @app.route('/sensitivity', methods=['POST'])
 def sensitivity():
     data = request.get_json()
-    print(data["sensitivity"])
-    with open("/Users/jasonsze/Desktop/CSCE 483/repo/YOLOv4-distance-tracking/sensitivity.txt", "w") as file:
-        file.write(data["sensitivity"])
-    return jsonify({'message': f'{data["sensitivity"]}'})
+    global currentSensitivity
+    currentSensitivity = data["sensitivity"]
+    output = jsonify({'message': f'{data["sensitivity"]}'})
+    print(output)
+    return output
+
+@app.route('/sensitivity', methods=['GET'])
+def getSensitivity():
+    global currentSensitivity
+    return jsonify({'sensitivity': f'{currentSensitivity}'})
         
 if __name__ == '__main__':
     app.run(debug=True, port=3001) 

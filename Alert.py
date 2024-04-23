@@ -1,5 +1,5 @@
 import pygame
-
+import requests
 
 class Alert:
     def __init__(self):
@@ -11,9 +11,10 @@ class Alert:
         self.sensitivity = "Low"
     
     def updateSensivitivty(self):
-        with open("/Users/jasonsze/Desktop/CSCE 483/repo/YOLOv4-distance-tracking/sensitivity.txt", "r") as file:
-            content = str(file.read())
-            self.sensitivity = content
+        #make a get request to the server to get the sensitivity
+        response = requests.get("http://localhost:3001/sensitivity")
+        self.sensitivity = response.json()["sensitivity"]
+
     
     def play_alert(self, mp3_file_path):
         pygame.mixer.init()
