@@ -17,5 +17,13 @@ def greet():
     else:
         return jsonify({'error': 'Missing "name" parameter'}), 400
 
+@app.route('/sensitivity', methods=['POST'])
+def sensitivity():
+    data = request.get_json()
+    print(data["sensitivity"])
+    with open("/Users/jasonsze/Desktop/CSCE 483/repo/YOLOv4-distance-tracking/sensitivity.txt", "w") as file:
+        file.write(data["sensitivity"])
+    return jsonify({'message': f'{data["sensitivity"]}'})
+        
 if __name__ == '__main__':
     app.run(debug=True, port=3001) 
