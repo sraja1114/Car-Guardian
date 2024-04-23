@@ -88,7 +88,7 @@ const WebcamComponent = () => {
   return (
     <div>
       <div>
-        <video ref={videoRef} autoPlay playsInline style={{ width:'119%', maxWidth: '1800px' }} />
+        <video ref={videoRef} autoPlay playsInline style={{ width:'125%',marginTop: '30px', maxWidth: '1800px' }} />
         {/* Apply width styles to make the video wider */}
       </div>
       <div>
