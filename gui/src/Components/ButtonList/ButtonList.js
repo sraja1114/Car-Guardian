@@ -6,9 +6,9 @@ import "./ButtonList.css";
 export default function ButtonList() {
   return (
     <Stack spacing={3} direction="column">
-      <Button variant="outlined">Open Files</Button>
-      <Button variant="outlined">Save last 30 seconds</Button>
-      <Button variant="outlined">Sensitivity</Button>
+      <Button variant="outlined" class="MuiButton-label">Open Files</Button>
+      <Button variant="outlined" class="MuiButton-label">Save last 30 seconds</Button>
+      <Button variant="outlined" class="MuiButton-label">Sensitivity</Button>
     </Stack>
   );
 }
