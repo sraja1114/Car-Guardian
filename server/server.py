@@ -1,7 +1,8 @@
 from flask import Flask, jsonify, request
 import os
 import webbrowser
-import datetime, time
+import time
+import shutil
 
 app = Flask(__name__)
 
@@ -31,24 +32,34 @@ def open():
 def precollision():
     body_data = request.get_json()
     data_type = body_data.get('type')
+    file_path_collision = "/mnt/c/Users/james/Downloads/Saved-PreCollisions"
     
-    downloads_folder = os.path.expanduser("~/Downloads")
-    downloads_list = os.listdir(downloads_folder)
-    downloads_count_initial = len(downloads_list)
-    start_time = datetime.now()
+    file_path = "/mnt/c/Users/james/Downloads"
+    file_folder = os.path.expanduser(file_path)
+    file_list_initial = os.listdir(file_folder)
+    file_count_initial = len(file_list_initial)
+    start_time = time.time()
     
-    
-    
-    for i in range(120): #monitorp downloads folder for new files, timeout after 120 seconds
-        downloads_list = os.listdir(downloads_folder)
-        downloads_count_new = len(downloads_list)
-        new_files = [f for f in downloads_count_new if f not in downloads_count_initial]
-        if new_files:
-            
-            new_file_name = new_files[0] # new file added in the meantime - should be newly saved file
-            print(new_file_name)
+    for i in range(120): #monitor downloads folder for new files, timeout after 120 seconds
+        file_list_new = os.listdir(file_folder)
+        file_count_new = len(file_list_new)
+        print(file_count_new)
+        print(file_count_initial)
+        if file_count_new > file_count_initial:
+            newfile = [x for x in file_list_new if x not in file_list_initial] # get new file
+            newfile = newfile[0]
+            end_time = time.time()
+            time_elapsed = end_time - start_time
+            if time_elapsed < 5: #if within fifteen seconds of new file when it did this it should send over two
+                print('move two')
+                break #temp break
+            else:
+                print('move one')
+                old_path = file_path + "/" + newfile
+                new_path = file_path_collision + "/" + newfile
+                shutil.move(old_path, new_path)
             break
-            
+        print('no new file ' + str(i))
         time.sleep(1)
     
     
