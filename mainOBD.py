@@ -221,6 +221,7 @@ print('Height :',cap.get(4))
 
 # # get the current time
 last_time = time.time()
+last_beep = last_time
 
 #current velocity
 current_velocity = 0.0
@@ -290,11 +291,14 @@ else:
         
         # Traffic Alerts
         # Car in front begins moving while stopped
-        if (current_velocity == 0) and (distance > 0) and (((distance - stopped_distance)/12) > 10):
+        if (current_velocity == 0) and (distance > 0) and (current_time - last_beep > 10) and (stopped_distance > 0.0) and (stopped_distance/12 < 25) and (((distance - stopped_distance)/12) > 10):
             alert.play_alert("Sounds/go.mp3")
+            last_beep = current_time
+            print("Stopped Distance:", stopped_distance/12)
 
         # Green light appears while stopped
-        if (current_velocity == 0) and (color == "green"):
+        if (current_velocity == 0) and (color == "green") and (current_time - last_beep > 10):
+            last_beep = current_time
             alert.play_alert("Sounds/go.mp3")
 
         # Reset stopped distance boolean when moving
