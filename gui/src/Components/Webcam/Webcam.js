@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from "react";
 
 const WebcamComponent = () => {
   const videoRef = useRef(null);
@@ -15,10 +15,11 @@ const WebcamComponent = () => {
     };
 
     const handleError = (error) => {
-      console.error('Error accessing webcam:', error);
+      console.error("Error accessing webcam:", error);
     };
 
-    navigator.mediaDevices.getUserMedia(constraints)
+    navigator.mediaDevices
+      .getUserMedia(constraints)
       .then(handleSuccess)
       .catch(handleError);
 
@@ -37,52 +38,58 @@ const WebcamComponent = () => {
 
   const startRecording = () => {
     const stream = videoRef.current.srcObject;
-    const mediaRecorder = new MediaRecorder(stream);
+    const newMediaRecorder = new MediaRecorder(stream);
     const chunks = [];
 
-    mediaRecorder.ondataavailable = (event) => {
+    newMediaRecorder.ondataavailable = (event) => {
       if (event.data.size > 0) {
         chunks.push(event.data);
       }
     };
 
-    mediaRecorder.onstop = () => {
-      const recordedBlob = new Blob(chunks, { type: 'video/webm' });
+    newMediaRecorder.onstop = () => {
+      const recordedBlob = new Blob(chunks, { type: "video/webm" });
       setRecordedChunks(chunks);
       setRecording(false);
       saveRecording(recordedBlob);
+      if (!timerId) {
+        // Restart recording if not stopped manually
+        startRecording();
+      }
     };
 
-    mediaRecorder.start();
+    newMediaRecorder.start();
     setRecording(true);
 
-    // Automatically stop recording after 10 seconds
+    // Automatically stop recording after 60 seconds
     const timer = setTimeout(() => {
-      mediaRecorder.stop();
+      newMediaRecorder.stop();
     }, 60000);
 
     setTimerId(timer);
+    setMediaRecorder(newMediaRecorder);
   };
 
   const stopRecording = () => {
-    const stream = videoRef.current.srcObject;
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorder.stop();
-    clearTimeout(timerId);
-    setTimerId(null);
+    if (mediaRecorder) {
+      mediaRecorder.stop();
+    }
+    if (timerId) {
+      clearTimeout(timerId);
+      setTimerId(null);
+    }
+    setRecording(false);
   };
 
   const saveRecording = (blob) => {
     const videoURL = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = videoURL;
-    const recording_name = `${new Date().toJSON().slice(0,19)}.mp4`;
+    const recording_name = `${new Date().toJSON().slice(0, 19)}.webm`;
     a.download = recording_name;
     document.body.appendChild(a);
     a.click();
     window.URL.revokeObjectURL(videoURL);
-
-    startRecording();
   };
 
   return (
@@ -96,11 +103,6 @@ const WebcamComponent = () => {
           <button onClick={startRecording}>Start Recording</button>
         ) : (
           <button onClick={stopRecording}>Stop Recording</button>
-        )}
-        {recordedChunks.length > 0 && (
-          <button onClick={() => saveRecording(new Blob(recordedChunks, { type: 'video/webm' }))}>
-            Save Recording
-          </button>
         )}
       </div>
     </div>
