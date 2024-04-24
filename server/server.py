@@ -1,8 +1,9 @@
-from flask import Flask, jsonify, request
 import os
-import webbrowser
-import time
 import shutil
+import time
+import webbrowser
+
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 currentSensitivity = "High"
@@ -38,6 +39,7 @@ def getSensitivity():
         
 @app.route('/open_file_explorer', methods=['POST'])
 def open():
+    print("running")
     downloads_folder = os.path.expanduser("~/Downloads")
     
     webbrowser.open_new_tab(downloads_folder)
