@@ -148,7 +148,7 @@ export default function ButtonList({ videoRef }) {
       {!recording ? (
           <Button variant="outlined" class="MuiButton-label" onClick={startRecording}>Start Recording</Button>
         ) : (
-            <Button variant="outlined" class="MuiButton-label" onClick={stopRecording}>Stop Recording</Button>
+            <Button variant="outlined" class="MuiButton-label" onClick={stopRecording}>Save Recording</Button>
         )}
       <Button variant="outlined" class="MuiButton-label" onClick={handleSensitivityChange}>{HLM[sensitivity]}</Button>
     </Stack>
