@@ -7,6 +7,7 @@ import FocalCalculation as FocalCalculation
 import cv2
 import Alert
 import numpy as np
+import requests
 from PIL import Image, ImageDraw
 
 from ultralytics import YOLO
@@ -51,6 +52,7 @@ def object_detector(img):
         center_car = []
         pre_collision_dist = 0
         color = "none"
+        stop_sign = False
 
         for box in prediction_boxes:
             if (int(box[1].cls) == 2) or (int(box[1].cls) == 7):
@@ -104,6 +106,9 @@ def object_detector(img):
                 draw.rectangle([(x_min, y_min - 20), (x_max, y_min)], fill=(0, 0, 0))
                 draw.text((x_min, y_min - 10), model.names[int(box[1].cls)], fill=(255, 255, 255))
                 draw.text((x_min, y_min - 20), current_color, fill=(255, 255, 255))
+            
+            elif int(box[1].cls) == 11:
+                stop_sign = True
 
         # Set color equal to the center most traffic light from predictions
         if len(predictions) > 0:
@@ -133,9 +138,9 @@ def object_detector(img):
 
             print("2", center_car)
             print(f"Distance: {pre_collision_dist} inches")
-            return [np.array(image_pil), pre_collision_dist, color]
+            return [np.array(image_pil), pre_collision_dist, color, stop_sign]
 
-        return [np.array(image_pil), 0, color]
+        return [np.array(image_pil), 0, color, stop_sign]
     except Exception as e:
         print("An error occurred during prediction:", e)
         return []
@@ -178,9 +183,9 @@ def process_frame(frame):
         # cropped_frame = crop_image(frame)
         
         # Call the predict_lights function to predict traffic light colors
-        new_frame, distance, color = object_detector(frame)
+        new_frame, distance, color, stop_sign = object_detector(frame)
         
-        return [new_frame, distance, color]
+        return [new_frame, distance, color, stop_sign]
     except Exception as e:
         print("An error occurred during frame processing:", e)
         return False
@@ -221,7 +226,9 @@ print('Height :',cap.get(4))
 
 # # get the current time
 last_time = time.time()
-last_beep = last_time
+last_pre_collision_warning = last_time
+last_go_notification = last_time
+last_stop_notification = last_time
 
 #current velocity
 current_velocity = 0.0
@@ -277,29 +284,38 @@ else:
         
         
         # Process the frame
-        processed_frame, distance, color = process_frame(frame)
+        processed_frame, distance, color, stop_sign = process_frame(frame)
         processed_frame_bgr = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
 
         if current_velocity == 0 and distance > 0 and stopped_distance_taken == False:
             stopped_distance = distance
         
         # Pre-collision warning
-        if (acceleration > 0) and (current_velocity > 0) and (distance > 0):
+        if (acceleration > 0) and (current_velocity > 0) and (distance > 0) and (current_time - last_pre_collision_warning > 5):
             status = alert.pre_collision_warning(distance, current_velocity)
+            if status == True:
+                last_pre_collision_warning = current_time
+                # Send post request for precollision warning with body: {type: "pre-collision"} to localhost:3001/record"}
+                # requests.post("http://localhost:3001/record", json={"type": "pre-collision"})
 
-        # Send post request for precollision warning
+
         
         # Traffic Alerts
         # Car in front begins moving while stopped
-        if (current_velocity == 0) and (distance > 0) and (current_time - last_beep > 10) and (stopped_distance > 0.0) and (stopped_distance/12 < 25) and (((distance - stopped_distance)/12) > 10):
+        if (current_velocity == 0) and (distance > 0) and (current_time - last_go_notification > 10) and (stopped_distance > 0.0) and (stopped_distance/12 < 25) and (((distance - stopped_distance)/12) > 10):
             alert.play_alert("Sounds/go.mp3")
-            last_beep = current_time
+            last_go_notification = current_time
             print("Stopped Distance:", stopped_distance/12)
 
         # Green light appears while stopped
-        if (current_velocity == 0) and (color == "green") and (current_time - last_beep > 10):
-            last_beep = current_time
+        if (current_velocity == 0) and (color == "green") and (current_time - last_go_notification > 10):
+            last_go_notification = current_time
             alert.play_alert("Sounds/go.mp3")
+
+        # Stop sign alert
+        if (stop_sign == True) and (current_time - last_stop_notification > 10):
+            alert.play_alert("Sounds/stop.mp3")
+            last_stop_notification = current_time
 
         # Reset stopped distance boolean when moving
         if (current_velocity != 0):

@@ -40,7 +40,8 @@ def getSensitivity():
 @app.route('/open_file_explorer', methods=['POST'])
 def open():
     print("running")
-    downloads_folder = os.path.expanduser("~/Downloads")
+    currentPath = os.path.dirname(os.path.realpath(__file__))
+    downloads_folder = os.path.expanduser(currentPath + "/../Saved Videos")
     
     webbrowser.open_new_tab(downloads_folder)
     return jsonify({"message": "Opened downloads folder"})
