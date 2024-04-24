@@ -21,7 +21,7 @@ def greet():
     else:
         return jsonify({'error': 'Missing "name" parameter'}), 400
 
-@app.route('/open_file_explorer', methods=['GET'])
+@app.route('/open_file_explorer', methods=['POST'])
 def open():
     downloads_folder = os.path.expanduser("~/Downloads")
     
@@ -58,6 +58,7 @@ def precollision():
                 old_path = file_path + "/" + newfile
                 new_path = file_path_collision + "/" + newfile
                 shutil.move(old_path, new_path)
+                return jsonify({"message": "Successfully moved file due to " + data_type})
             break
         print('no new file ' + str(i))
         time.sleep(1)
