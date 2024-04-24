@@ -47,6 +47,7 @@ def open():
 def precollision():
     body_data = request.get_json()
     data_type = body_data.get('type')
+    file_path_loud_noise = "/mnt/c/Users/james/Downloads/Saved-LoudNoises"
     file_path_collision = "/mnt/c/Users/james/Downloads/Saved-PreCollisions"
     
     file_path = "/mnt/c/Users/james/Downloads"
@@ -65,15 +66,23 @@ def precollision():
             newfile = newfile[0]
             end_time = time.time()
             time_elapsed = end_time - start_time
-            if time_elapsed < 5: #if within fifteen seconds of new file when it did this it should send over two
+            if time_elapsed < 15: #if within fifteen seconds of new file when it did this it should send over two
                 print('move two')
                 break #temp break
             else:
                 print('move one')
-                old_path = file_path + "/" + newfile
-                new_path = file_path_collision + "/" + newfile
-                shutil.move(old_path, new_path)
-                return jsonify({"message": "Successfully moved file due to " + data_type})
+                if(data_type == 'pre-collision'):
+                    
+                    old_path = file_path + "/" + newfile
+                    new_path = file_path_collision + "/" + newfile
+                    shutil.move(old_path, new_path)
+                    return jsonify({"message": "Successfully moved file due to " + data_type})
+                if(data_type == 'loud-noise'):
+                    old_path = file_path + "/" + newfile
+                    new_path = file_path_loud_noise + "/" + newfile
+                    shutil.move(old_path, new_path)
+                    return jsonify({"message": "Successfully moved file due to " + data_type})
+                return jsonify({"message": "Could not move file due to unknown type of: " + data_type})
             break
         print('no new file ' + str(i))
         time.sleep(1)
