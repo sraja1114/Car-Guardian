@@ -12,8 +12,11 @@ export default function ButtonList() {
 
 
   const handleOpenFiles = () => {
-    // Add your logic here
-    console.log("Opening files...");
+
+    fetchPost('/open_file_explorer', 3).then(data => {
+        
+    })
+    console.log("post request for open_file_explorer");
   };
 
   // Function to handle saving last 30 seconds
