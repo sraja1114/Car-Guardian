@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import ButtonList from "../ButtonList/ButtonList";
+import './Webcam.css';
 const WebcamComponent = () => {
   const videoRef = useRef(null);
   
@@ -37,12 +38,12 @@ const WebcamComponent = () => {
 
   return (
     <div className="bigContainer">
-      <div>
-        <video ref={videoRef} autoPlay playsInline style={{ width:'125%',marginTop: '30px', maxWidth: '1800px' }} />
-        {/* Apply width styles to make the video wider */}
-      </div>
       <div className="NewButtonContainer">
         <ButtonList videoRef={videoRef}/>
+      </div>
+      <div>
+        <video ref={videoRef} autoPlay playsInline style={{ width:'110%',marginTop:'35px'}} />
+        {/* Apply width styles to make the video wider */}
       </div>
     </div>
   );
