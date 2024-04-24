@@ -16,6 +16,7 @@ UNIVERSAL_COUNT = 0
 CAR_REF_WIDTH = 78.6 #INCHES
 AVG_CAR_WIDTH = 70 #INCHES
 AVG_TRUCK_WIDTH = 80 #INCHES
+DISTANCE_FROM_FRONT = 57.76 #INCHES
 
 # distance finder function 
 def distance_finder(focal_length, real_object_width, width_in_frmae):
@@ -62,7 +63,7 @@ def object_detector(img):
                 width = x_max - x_min
                 center = (x_min + x_max) / 2
                 
-                distance = distance_finder(interpolate_focal(width), AVG_CAR_WIDTH, width)
+                distance = distance_finder(interpolate_focal(width), CAR_REF_WIDTH, width) - DISTANCE_FROM_FRONT
                
                 if center > 520 and center < 920:
                     center_car.append([center, distance, width, height])
