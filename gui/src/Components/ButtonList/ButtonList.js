@@ -85,7 +85,7 @@ export default function ButtonList({ videoRef }) {
     window.URL.revokeObjectURL(videoURL);
   };
 
-  const detectLoudNoise = () => {
+  const detectLoudNoise = React.useCallback(() => {
     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
     const analyser = audioContext.createAnalyser();
     const stream = videoRef.current.srcObject;
@@ -120,7 +120,7 @@ export default function ButtonList({ videoRef }) {
     };
   
     checkLoudNoise();
-  };
+  }, [videoRef]);
   
   
  
@@ -143,14 +143,14 @@ export default function ButtonList({ videoRef }) {
       <img src={myImage} alt="My Image" className="my-image" />
     </div>
     <Stack spacing={3} direction="column">
-      <Button variant="outlined" class="MuiButton-label" onClick={handleOpenFiles}>Open Files</Button>
+      <Button variant="outlined" className="MUIButton" onClick={handleOpenFiles}>Open Files</Button>
       
       {!recording ? (
-          <Button variant="outlined" class="MuiButton-label" onClick={startRecording}>Start Recording</Button>
+          <Button variant="outlined" className="MUIButton" onClick={startRecording}>Start Recording</Button>
         ) : (
-            <Button variant="outlined" class="MuiButton-label" onClick={stopRecording}>Save Recording</Button>
+            <Button variant="outlined" className="MUIButton" onClick={stopRecording}>Save Recording</Button>
         )}
-      <Button variant="outlined" class="MuiButton-label" onClick={handleSensitivityChange}>{HLM[sensitivity]}</Button>
+      <Button variant="outlined" className="MUIButton" onClick={handleSensitivityChange}>{HLM[sensitivity]}</Button>
     </Stack>
     </div>
     </>
