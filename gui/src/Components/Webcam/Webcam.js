@@ -1,11 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
-
+import React, { useEffect, useRef } from "react";
+import ButtonList from "../ButtonList/ButtonList";
 const WebcamComponent = () => {
   const videoRef = useRef(null);
-  const [recording, setRecording] = useState(false);
-  const [recordedChunks, setRecordedChunks] = useState([]);
-  const [timerId, setTimerId] = useState(null);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
+  
 
   useEffect(() => {
     const constraints = { video: true, audio: true };
@@ -36,74 +33,16 @@ const WebcamComponent = () => {
     };
   }, []);
 
-  const startRecording = () => {
-    const stream = videoRef.current.srcObject;
-    const newMediaRecorder = new MediaRecorder(stream);
-    const chunks = [];
-
-    newMediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        chunks.push(event.data);
-      }
-    };
-
-    newMediaRecorder.onstop = () => {
-      const recordedBlob = new Blob(chunks, { type: "video/webm" });
-      setRecordedChunks(chunks);
-      setRecording(false);
-      saveRecording(recordedBlob);
-      if (!timerId) {
-        // Restart recording if not stopped manually
-        startRecording();
-      }
-    };
-
-    newMediaRecorder.start();
-    setRecording(true);
-
-    // Automatically stop recording after 60 seconds
-    const timer = setTimeout(() => {
-      newMediaRecorder.stop();
-    }, 60000);
-
-    setTimerId(timer);
-    setMediaRecorder(newMediaRecorder);
-  };
-
-  const stopRecording = () => {
-    if (mediaRecorder) {
-      mediaRecorder.stop();
-    }
-    if (timerId) {
-      clearTimeout(timerId);
-      setTimerId(null);
-    }
-    setRecording(false);
-  };
-
-  const saveRecording = (blob) => {
-    const videoURL = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = videoURL;
-    const recording_name = `${new Date().toJSON().slice(0, 19)}.webm`;
-    a.download = recording_name;
-    document.body.appendChild(a);
-    a.click();
-    window.URL.revokeObjectURL(videoURL);
-  };
+  
 
   return (
-    <div>
+    <div className="bigContainer">
       <div>
         <video ref={videoRef} autoPlay playsInline style={{ width:'125%',marginTop: '30px', maxWidth: '1800px' }} />
         {/* Apply width styles to make the video wider */}
       </div>
-      <div>
-        {!recording ? (
-          <button onClick={startRecording}>Start Recording</button>
-        ) : (
-          <button onClick={stopRecording}>Stop Recording</button>
-        )}
+      <div className="NewButtonContainer">
+        <ButtonList videoRef={videoRef}/>
       </div>
     </div>
   );

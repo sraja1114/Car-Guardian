@@ -1,7 +1,6 @@
 import React from 'react';
 
 
-import ButtonList from '../../Components/ButtonList/ButtonList.js';
 import WebcamComponent from '../../Components/Webcam/Webcam.js';
 import './Landing.css';
 function Landing() {
@@ -40,7 +39,7 @@ function Landing() {
       )} */}
       <div className='WebcamContainer'>
         <WebcamComponent/>
-        <ButtonList/>
+        
       </div>
       
     </div>
