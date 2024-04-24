@@ -52,6 +52,7 @@ export default function ButtonList({ videoRef }) {
 
     newMediaRecorder.start();
     setRecording(true);
+    detectLoudNoise();
 
     // Automatically stop recording after 60 seconds
     const timer = setTimeout(() => {
@@ -83,6 +84,46 @@ export default function ButtonList({ videoRef }) {
     a.click();
     window.URL.revokeObjectURL(videoURL);
   };
+
+  const detectLoudNoise = () => {
+    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    const analyser = audioContext.createAnalyser();
+    const stream = videoRef.current.srcObject;
+    const source = audioContext.createMediaStreamSource(stream);
+  
+    source.connect(analyser);
+  
+    analyser.fftSize = 2048;
+    const bufferLength = analyser.frequencyBinCount;
+    const dataArray = new Uint8Array(bufferLength);
+  
+    let isLoudNoiseDetected = false;
+  
+    const checkLoudNoise = () => {
+      analyser.getByteFrequencyData(dataArray);
+      const peak = Math.max(...dataArray);
+  
+      if (peak > 250) { // Adjust this threshold as needed
+        if (!isLoudNoiseDetected) {
+          console.log("Loud noise detected!");
+          // fetchPost("/record", {type: "noise"}).then(data => {
+          //     setPostData(data.message);
+          // });
+          isLoudNoiseDetected = true;
+          setTimeout(() => {
+            isLoudNoiseDetected = false; // Reset flag after 5 seconds
+          }, 5000);
+        }
+      }
+  
+      setTimeout(checkLoudNoise, 100); // Check every 100 milliseconds
+    };
+  
+    checkLoudNoise();
+  };
+  
+  
+ 
 
 // Function to handle sensitivity change
     const handleSensitivityChange = () => {
