@@ -5,6 +5,7 @@ import time
 import shutil
 
 app = Flask(__name__)
+currentSensitivity = "High"
 
 # example get request
 @app.route('/default_greet')
@@ -21,6 +22,20 @@ def greet():
     else:
         return jsonify({'error': 'Missing "name" parameter'}), 400
 
+@app.route('/sensitivity', methods=['POST'])
+def sensitivity():
+    data = request.get_json()
+    global currentSensitivity
+    currentSensitivity = data["sensitivity"]
+    output = jsonify({'message': f'{data["sensitivity"]}'})
+    print(output)
+    return output
+
+@app.route('/sensitivity', methods=['GET'])
+def getSensitivity():
+    global currentSensitivity
+    return jsonify({'sensitivity': f'{currentSensitivity}'})
+        
 @app.route('/open_file_explorer', methods=['POST'])
 def open():
     downloads_folder = os.path.expanduser("~/Downloads")

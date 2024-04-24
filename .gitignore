@@ -1,3 +1,4 @@
 *.mp4
+*.webm
 velocities.txt
 node_modules
