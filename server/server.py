@@ -50,11 +50,12 @@ def open():
 def precollision():
     body_data = request.get_json()
     data_type = body_data.get('type')
-    file_path_loud_noise = "/mnt/c/Users/james/Downloads/Saved-LoudNoises"
-    file_path_collision = "/mnt/c/Users/james/Downloads/Saved-PreCollisions"
+    currentPath = os.path.dirname(os.path.realpath(__file__))
+    file_path_loud_noise = currentPath + "/../Saved Videos/Noises"
+    file_path_collision = currentPath + "/../Saved Videos/Pre-Collision"
     
     
-    file_path = "/mnt/c/Users/james/Downloads"
+    file_path = currentPath + "/../Saved Videos"
     file_folder = os.path.expanduser(file_path)
     file_list_initial = os.listdir(file_folder)
     file_count_initial = len(file_list_initial)
@@ -66,6 +67,7 @@ def precollision():
         print(file_count_new)
         print(file_count_initial)
         if file_count_new > file_count_initial:
+            time.sleep(2)
             newfile = [x for x in file_list_new if x not in file_list_initial] # get new file
             newfile = newfile[0]
             end_time = time.time()

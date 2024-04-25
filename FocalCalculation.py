@@ -112,9 +112,9 @@ def CalculateFocalLengths():
     interpolate_focal = spi.interp1d(car_widths, car_focal_lengths, kind='cubic')
 
     #plot interpolated focal lengths
-    x = np.linspace(0, 1440, 1000)
-    y = interpolate_focal(x)
-    plt.plot(x, y)
-    plt.show()
+    # x = np.linspace(0, 1440, 1000)
+    # y = interpolate_focal(x)
+    # plt.plot(x, y)
+    # plt.show()
 
     return interpolate_focal

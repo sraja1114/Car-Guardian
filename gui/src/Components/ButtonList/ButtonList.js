@@ -106,9 +106,9 @@ export default function ButtonList({ videoRef }) {
       if (peak > 250) { // Adjust this threshold as needed
         if (!isLoudNoiseDetected) {
           console.log("Loud noise detected!");
-          // fetchPost("/record", {type: "noise"}).then(data => {
-          //     setPostData(data.message);
-          // });
+          fetchPost("/record", {type: "loud-noise"}).then(data => {
+              setPostData(data.message);
+          });
           isLoudNoiseDetected = true;
           setTimeout(() => {
             isLoudNoiseDetected = false; // Reset flag after 5 seconds

@@ -15,7 +15,7 @@ while True:
     current_time = time.time()
 
     # check if 200ms have passed since the last query
-    if current_time - last_time >= 0.2:
+    if current_time - last_time >= 0.1:
         # send the command, and parse the response
         response = connection.query(cmd)
 
