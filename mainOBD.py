@@ -7,6 +7,7 @@ import FocalCalculation as FocalCalculation
 import cv2
 import Alert
 import numpy as np
+import requests
 from PIL import Image, ImageDraw
 
 from ultralytics import YOLO
@@ -15,6 +16,7 @@ UNIVERSAL_COUNT = 0
 CAR_REF_WIDTH = 78.6 #INCHES
 AVG_CAR_WIDTH = 70 #INCHES
 AVG_TRUCK_WIDTH = 80 #INCHES
+DISTANCE_FROM_FRONT = 57.76 #INCHES
 
 # distance finder function 
 def distance_finder(focal_length, real_object_width, width_in_frmae):
@@ -51,6 +53,7 @@ def object_detector(img):
         center_car = []
         pre_collision_dist = 0
         color = "none"
+        stop_sign = False
 
         for box in prediction_boxes:
             if (int(box[1].cls) == 2) or (int(box[1].cls) == 7):
@@ -60,7 +63,7 @@ def object_detector(img):
                 width = x_max - x_min
                 center = (x_min + x_max) / 2
                 
-                distance = distance_finder(interpolate_focal(width), AVG_CAR_WIDTH, width)
+                distance = distance_finder(interpolate_focal(width), AVG_CAR_WIDTH, width) - DISTANCE_FROM_FRONT
                
                 if center > 520 and center < 920:
                     center_car.append([center, distance, width, height])
@@ -98,12 +101,25 @@ def object_detector(img):
                     current_color = "yellow"
                     print("Traffic light color: Yellow", red_pixels, green_pixels, yellow_pixels)
                 else:
+                    predictions.append(["unknown", center])
                     print("Unable to determine traffic light color")
 
                 draw.rectangle([(x_min, y_min), (x_max, y_max)], outline="red", width=2)
                 draw.rectangle([(x_min, y_min - 20), (x_max, y_min)], fill=(0, 0, 0))
                 draw.text((x_min, y_min - 10), model.names[int(box[1].cls)], fill=(255, 255, 255))
                 draw.text((x_min, y_min - 20), current_color, fill=(255, 255, 255))
+            
+            elif int(box[1].cls) == 11:
+                x_min, y_min, x_max, y_max = map(int, box[0])
+
+                height = y_max - y_min
+                width = x_max - x_min
+                center = (x_min + x_max) / 2
+                area = height * width
+                print(area)
+
+                if (center >= 720) and (area > 4000):
+                    stop_sign = True
 
         # Set color equal to the center most traffic light from predictions
         if len(predictions) > 0:
@@ -133,9 +149,9 @@ def object_detector(img):
 
             print("2", center_car)
             print(f"Distance: {pre_collision_dist} inches")
-            return [np.array(image_pil), pre_collision_dist, color]
+            return [np.array(image_pil), pre_collision_dist, color, stop_sign]
 
-        return [np.array(image_pil), 0, color]
+        return [np.array(image_pil), 0, color, stop_sign]
     except Exception as e:
         print("An error occurred during prediction:", e)
         return []
@@ -178,9 +194,9 @@ def process_frame(frame):
         # cropped_frame = crop_image(frame)
         
         # Call the predict_lights function to predict traffic light colors
-        new_frame, distance, color = object_detector(frame)
+        new_frame, distance, color, stop_sign = object_detector(frame)
         
-        return [new_frame, distance, color]
+        return [new_frame, distance, color, stop_sign]
     except Exception as e:
         print("An error occurred during frame processing:", e)
         return False
@@ -214,13 +230,16 @@ print('Width :',cap.get(3))
 print('Height :',cap.get(4))
 
 # connecting to obd connection
-# connection = obd.OBD("COM3")  # replace "COM3" with your port
+connection = obd.OBD("COM3")  # replace "COM3" with your port
 
 # select an OBD command (sensor)
-# cmd = obd.commands.SPEED
+cmd = obd.commands.SPEED
 
 # # get the current time
 last_time = time.time()
+last_pre_collision_warning = last_time - 60
+last_go_notification = last_time
+last_stop_notification = last_time
 
 #current velocity
 current_velocity = 0.0
@@ -231,7 +250,7 @@ acceleration = 0.0
 alert = Alert.Alert()
 
 stopped_distance = 0
-stopped_distance_taken = True
+stopped_distance_taken = False
 velocities = []
 
 # Check if the webcam is opened correctly
@@ -254,15 +273,15 @@ else:
         # check if 200ms have passed since the last query
         if current_time - last_time >= 0.1:
             # send the command, and parse the response
-            # response = connection.query(cmd)
+            response = connection.query(cmd)
 
             # user-friendly unit conversions
-            # current_velocity = response.value.to("mph").magnitude
-            # print(current_velocity)
+            current_velocity = response.value.to("mph").magnitude
+            print(current_velocity)
 
             #random velocity value for testing
-            current_velocity = random.randint(0, 0)
-            print(current_velocity)
+            # current_velocity = random.randint(0, 0)
+            # print(current_velocity)
 
             #add the current velocity to the list of velocities
             velocities.append(current_velocity)
@@ -276,30 +295,44 @@ else:
         
         
         # Process the frame
-        processed_frame, distance, color = process_frame(frame)
+        processed_frame, distance, color, stop_sign = process_frame(frame)
         processed_frame_bgr = cv2.cvtColor(processed_frame, cv2.COLOR_RGB2BGR)
 
-        if current_velocity == 0 and distance > 0 and stopped_distance_taken == False:
+        if ((current_velocity == 0) and (distance > 0) and (stopped_distance_taken == False)):
             stopped_distance = distance
+            stopped_distance_taken = True
         
         # Pre-collision warning
-        if (acceleration > 0) and (current_velocity > 0) and (distance > 0):
-            status = alert.pre_collision_warning(distance, current_velocity)
+        # if (current_velocity > 0) and (distance > 0) and (current_time - last_pre_collision_warning > 60):
+        #     status = alert.pre_collision_warning(distance, current_velocity)
+        #     if status == True:
+        #         last_pre_collision_warning = current_time
+                # Send post request for precollision warning with body: {type: "pre-collision"} to localhost:3001/record"}
+                # requests.post("http://localhost:3001/record", json={"type": "pre-collision"})
 
-        #     #use status here for GUI
+
         
         # Traffic Alerts
         # Car in front begins moving while stopped
-        if (current_velocity == 0) and (distance > 0) and (((distance - stopped_distance)/12) > 10):
+        if (current_velocity == 0) and (distance > 0) and (current_time - last_go_notification > 10) and (stopped_distance > 0.0) and (stopped_distance/12 < 50) and (((distance - stopped_distance)/12) > 5):
             alert.play_alert("Sounds/go.mp3")
+            last_go_notification = current_time
+            print("Stopped Distance:", stopped_distance/12)
 
         # Green light appears while stopped
-        if (current_velocity == 0) and (color == "green"):
+        if (current_velocity == 0) and (color == "green") and (current_time - last_go_notification > 10):
+            last_go_notification = current_time
             alert.play_alert("Sounds/go.mp3")
+
+        # Stop sign alert
+        if (stop_sign == True) and (current_time - last_stop_notification > 10) and (acceleration >= 0):
+            alert.play_alert("Sounds/stop.mp3")
+            last_stop_notification = current_time
 
         # Reset stopped distance boolean when moving
         if (current_velocity != 0):
             stopped_distance_taken = False
+            stopped_distance = 0
 
         #add acceleration and velocity to the top right of the frame
         #put a black rectangle behind the text

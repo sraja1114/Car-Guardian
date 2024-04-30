@@ -1,5 +1,6 @@
 import cv2 as cv 
 import numpy as np
+import matplotlib.pyplot as plt
 import torch
 import scipy.interpolate as spi
 from ultralytics import YOLO
@@ -8,6 +9,7 @@ from ultralytics import YOLO
 REFERENCE_DISTANCES = [25.98, 52.476, 101.22, 138.588, 177.756, 227.796, 267.396, 325.152, 390, 465.084, 532.836, 621.54, 966.264, 1291.2, 1484.76]
 CAR_REF_WIDTH = 78.6 #INCHES
 AVG_CAR_WIDTH = 70 #INCHES
+DISTANCE_FROM_FRONT = 57.76 #INCHES
 
 # Object detector constant
 CONFIDENCE_THRESHOLD = 0.4
@@ -52,7 +54,7 @@ def calculate_focal(img, index):
                 width = x_max - x_min
                 center = (x_min + x_max) / 2
 
-                focal_length = focal_length_finder(REFERENCE_DISTANCES[index], CAR_REF_WIDTH, width)
+                focal_length = focal_length_finder(REFERENCE_DISTANCES[index] + DISTANCE_FROM_FRONT, CAR_REF_WIDTH, width)
 
                 if center > 520 and center < 920:
                     center_car.append([center, focal_length, width, height])
@@ -99,10 +101,20 @@ def CalculateFocalLengths():
     # add filler values for when at 0 pixels and 1440 pixels
     # assume average focal length at far distances and 500 at close distances
     car_widths.append(0)
-    car_focal_lengths.append(1440)
+    car_focal_lengths.append(1650)
     car_widths.append(1440)
-    car_focal_lengths.append(200)
+    car_focal_lengths.append(1050)
+
+    print("Car Focal Lengths", car_focal_lengths)
+    print("Car Widths", car_widths)
 
     # interpolate the focal lengths
     interpolate_focal = spi.interp1d(car_widths, car_focal_lengths, kind='cubic')
+
+    #plot interpolated focal lengths
+    # x = np.linspace(0, 1440, 1000)
+    # y = interpolate_focal(x)
+    # plt.plot(x, y)
+    # plt.show()
+
     return interpolate_focal
