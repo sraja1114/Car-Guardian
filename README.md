@@ -193,8 +193,33 @@ def returnCameraIndexes():
 ### React.js OBS Virtual Webcam Setup
 For the React.js frontend, in order to change the camera, you alter the browser settings. Make sure to allow localhost to access the camera and microphone. Below is where to change the settings if you are using Chrome as your browser. Navitage to Settings > Privacy and settings > Site settings > Camera. If you are using another browser, the camera options should also be available in your browser settings.
 
-### OBDWiz Setup Instructions
+![image](https://github.com/sraja1114/YOLOv4-distance-tracking/assets/123511793/e6bebfc9-8789-4101-98d3-3b4f0d0bb74f)
 
+### OBDWiz Setup Instructions
+- In order to use and test the OBDLink SX cable, the OBDWiz software needs to be installed from the following website: https://www.obdsoftware.net/downloads/obdwiz.
+- Note: This software will only work on Windows. For Linux, a ELM325 OBD2 to USB cable can be purchased, and it should be recognized as a USB serial port when plugged in.
+- After the installation is complete, plug in your OBD2 cable into your vehicle and the USB into your computer. To locate your OBD port, refer to the Figure below. Each possible location is labeled from 1-9, with the most common location being on the drivers side below and to the left of the steering wheel.
+
+![image](https://github.com/sraja1114/YOLOv4-distance-tracking/assets/123511793/551fc2c6-a229-4b50-9aed-28351c7c2ee3)
+
+- To connect the cable to the car, press the connect button and the program should automatically set up the cable to be used for your specific vehicle. There may be additional questions asked to setup that change between vehicle manufacturers.
+
+![image](https://github.com/sraja1114/YOLOv4-distance-tracking/assets/123511793/63314514-e137-4fb7-b5e0-df00cd60726c)
+
+- After the OBDLink SX is connected, the information of the car should be displayed in the “Dashboard” tab of the program.
+
+![image](https://github.com/sraja1114/YOLOv4-distance-tracking/assets/123511793/54aee429-5da1-4007-8967-b24f41456e48)
+
+- To test if the cable if functioning correctly in Python, run OBDTest.py using: python OBDTest.py. If you are on Linux, note the comment on line 5 to switch “COM3” to "/dev/ttyUSB0". If you encounter errors, it is likely that you are using the incorrect device or it is not be recognized by python-OBD. 
 
 ### Operation Instructions
-
+1. Clone the github repository using the link
+2. Open terminal
+3. To enter the correct directory: cd gui
+4. To install node packages, run the command: npm i
+5. To run the React.js code, run the command: npm start
+6. Open a second terminal
+7. To enter the correct directory: cd server
+8. To run the server type the command: python3 server.py
+9. Open a third terminal
+10. From the root directory, to run the YOLO script: python3 mainOBD.py
