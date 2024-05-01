@@ -220,12 +220,30 @@ print ports
 
 ### Operation Instructions
 1. Clone the github repository using the link
+```
+git clone https://github.com/sraja1114/Car-Guardian
+```
 2. Open terminal
-3. To enter the correct directory: cd gui
-4. To install node packages, run the command: npm i
-5. To run the React.js code, run the command: npm start
+3. To enter the correct directory:
+```
+cd gui
+```
+4. To install node packages, run the command:
+```
+npm i
+```
+5. To run the React.js code, run the command:
+```
+npm start
+```
 6. Open a second terminal
-7. To enter the correct directory: cd server
+7. To enter the correct directory:
+```
+cd server
+```
 8. To run the server type the command: python3 server.py
 9. Open a third terminal
-10. From the root directory, to run the YOLO script: python3 mainOBD.py
+10. From the root directory, to run the YOLO script:
+```
+python3 mainOBD.py
+```
