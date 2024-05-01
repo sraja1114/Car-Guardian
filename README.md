@@ -4,7 +4,7 @@
 The primary issue we are addressing stems from the increased average age of cars on the road, standing at 12.5 years. This implies that a significant portion of cars lacks modern safety features. Since 63% of vehicles in the United States predate 2015, a majority of drivers face heightened vulnerability, lacking crucial safety advancements to mitigate risks effectively. The main objective of our project was to equip older cars with new safety features that they lack in order to increase the safety of drivers on the road, and decrease the amount of information that a driver needs to keep track of while driving. 
 
 ## Project Requirements
-Main Features: Pre-collision detection, Traffic light detection, Intelligent video clipping and standard dash cam features
+Main Features: Pre-collision detection, traffic light detection, stop sign detection, intelligent video clipping and standard dash cam features
 
 Object Detection: 85% accuracy in detection, The calculated distances using YOLO is within a 10% margin of error from the actual distance
 
@@ -190,3 +190,11 @@ def returnCameraIndexes():
         i -= 1
     return arr
 ```
+### React.js OBS Virtual Webcam Setup
+For the React.js frontend, in order to change the camera, you alter the browser settings. Make sure to allow localhost to access the camera and microphone. Below is where to change the settings if you are using Chrome as your browser. Navitage to Settings > Privacy and settings > Site settings > Camera. If you are using another browser, the camera options should also be available in your browser settings.
+
+### OBDWiz Setup Instructions
+
+
+### Operation Instructions
+
