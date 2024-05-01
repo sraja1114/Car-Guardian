@@ -159,3 +159,12 @@ model = YOLO('yolov8n.pt').to(device)
 The next piece of software that should be installed is OBS Studio. OBS Studio’s virtual camera feature was used to allow multiple programs to use the webcam simultaneously. Below will be the installation instruction and setup process.
 
 To install OBS Studio, visit the following website to download executable for your operating system: https://obsproject.com/download.
+
+### Creating the Scene
+1. Navigate to File > Settings to set up the video output to the correct resolution.
+2. Go to the “Video” tab and edit the resolution to be 1440x1080. This allows us to use the full 4:3 image that the sensor of the camera is receiving.
+3. Next, exit out of the settings and click the “Add Scene” button in the “Scenes” window in the bottom left of the screen. Then, enter a name for the scene.
+4. After that, click “Add Sources” in the “Sources” window on the right of the “Scene” Window. 
+5. Then, add the webcam as a “Video Capture Device”. Afterward, set a name for the source, and then select “Logitech 1080p Stream” as the device in the window that appears with the remaining inputs left as default.
+6. The webcam should now appear in the “Sources” window as shown below. The visibility of the camera can be toggle on and off with the eye button. (You can also add any prerecorded videos and images if you wish to test the output of the code. This feature was used throughout the testing of our final product. The sources should look as follow if additional are added.)
+7. Lastly, in the “Controls” window in the bottom right. Click the “Start Virtual Camera” button to output the video as a webcam.
