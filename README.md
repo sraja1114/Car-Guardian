@@ -166,5 +166,27 @@ To install OBS Studio, visit the following website to download executable for yo
 3. Next, exit out of the settings and click the “Add Scene” button in the “Scenes” window in the bottom left of the screen. Then, enter a name for the scene.
 4. After that, click “Add Sources” in the “Sources” window on the right of the “Scene” Window. 
 5. Then, add the webcam as a “Video Capture Device”. Afterward, set a name for the source, and then select “Logitech 1080p Stream” as the device in the window that appears with the remaining inputs left as default.
-6. The webcam should now appear in the “Sources” window as shown below. The visibility of the camera can be toggle on and off with the eye button. (You can also add any prerecorded videos and images if you wish to test the output of the code. This feature was used throughout the testing of our final product. The sources should look as follow if additional are added.)
+6. The webcam should now appear in the “Sources” window as shown below. The visibility of the camera can be toggle on and off with the eye button. (You can also add any prerecorded videos and images if you wish to test the output of the code. This feature was used throughout the testing of our final product.)
 7. Lastly, in the “Controls” window in the bottom right. Click the “Start Virtual Camera” button to output the video as a webcam.
+
+### Choosing the OBS Virtual Camera as the Video Source 
+In mainOBD.py, go to line 224 to update the source that YOLO uses for it’s calculations.
+
+![image](https://github.com/sraja1114/YOLOv4-distance-tracking/assets/123511793/0625cb50-4cf1-4e3e-b9bd-7d5a7a343e2b)
+
+The number provided to the VideoCapture(index) is the sourced used in the program. If you have a webcam built into your device, such as for a Laptop, it will likely be at index 2 (0 being the default camera, 1 being the feed from the attached webcam, and 2 being the virtual camera from OBS). If there are no default cameras, the OBS Virtual Webcam will likely be at index 1. Below is a function that can be used to see the valid video camera on your device.
+```
+def returnCameraIndexes():
+    # checks the first 10 indexes.
+    index = 0
+    arr = []
+    i = 10
+    while i > 0:
+        cap = cv2.VideoCapture(index)
+        if cap.read()[0]:
+            arr.append(index)
+            cap.release()
+        index += 1
+        i -= 1
+    return arr
+```
