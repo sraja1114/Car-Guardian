@@ -22,7 +22,7 @@ https://drive.google.com/file/d/1h3RFA_9uvHDd9rbV4NpVV3qNjaVmApRX/view?usp=shari
 
 
 ### Hardware Installation
-1. Plug in a 1080p logitech camera into the laptop
+1. Plug in the Logitech Webcam into the computer (further explained in the Software Installation Section)
 2. Plug the 7in LCD screen into the laptop
 3. Plug the car’s power adapter into the laptop
 4. Plug the OBD port into laptop
@@ -210,7 +210,13 @@ For the React.js frontend, in order to change the camera, you alter the browser 
 
 ![image](https://github.com/sraja1114/YOLOv4-distance-tracking/assets/123511793/54aee429-5da1-4007-8967-b24f41456e48)
 
-- To test if the cable if functioning correctly in Python, run OBDTest.py using: python OBDTest.py. If you are on Linux, note the comment on line 5 to switch “COM3” to "/dev/ttyUSB0". If you encounter errors, it is likely that you are using the incorrect device or it is not be recognized by python-OBD. 
+- To test if the cable if functioning correctly in Python, run OBDTest.py using: python OBDTest.py. If you are on Linux, note the comment on line 5 to switch “COM3” to "/dev/ttyUSB0". If you encounter errors, it is likely that you are using the incorrect device or it is not be recognized by python-OBD.
+
+- To check if your device is recognizing the serial connection, the following code can be used to see the valid USB or RF devices:
+```
+ports = obd.scan_serial()      # return list of valid USB or RF ports
+print ports
+```
 
 ### Operation Instructions
 1. Clone the github repository using the link
