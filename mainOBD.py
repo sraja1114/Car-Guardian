@@ -303,12 +303,12 @@ else:
             stopped_distance_taken = True
         
         # Pre-collision warning
-        # if (current_velocity > 0) and (distance > 0) and (current_time - last_pre_collision_warning > 60):
-        #     status = alert.pre_collision_warning(distance, current_velocity)
-        #     if status == True:
-        #         last_pre_collision_warning = current_time
+        if (current_velocity > 0) and (distance > 0) and (current_time - last_pre_collision_warning > 60):
+            status = alert.pre_collision_warning(distance, current_velocity)
+            if status == True:
+                last_pre_collision_warning = current_time
                 # Send post request for precollision warning with body: {type: "pre-collision"} to localhost:3001/record"}
-                # requests.post("http://localhost:3001/record", json={"type": "pre-collision"})
+                requests.post("http://localhost:3001/record", json={"type": "pre-collision"})
 
 
         

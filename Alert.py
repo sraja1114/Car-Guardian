@@ -44,7 +44,6 @@ class Alert:
         if distance_m < 1.5:
             return False
 
-
         stopping_time = distance_m / velocity_mps
 
         print("Stopping:", stopping_time)

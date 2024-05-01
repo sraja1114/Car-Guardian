@@ -2,7 +2,7 @@ import obd
 import time
 
 # manually specify the serial port
-connection = obd.OBD("COM3")  # replace "COM3" with your port
+connection = obd.OBD("COM3")  # replace with "/dev/ttyUSB0" for the default device in Linux
 
 # select an OBD command (sensor)
 cmd = obd.commands.SPEED
