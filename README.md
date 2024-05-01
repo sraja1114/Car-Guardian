@@ -19,3 +19,42 @@ https://drive.google.com/file/d/1cJTCRGgr-AKXftDhSrfZo4vX_noMZuZC/view?usp=shari
 
 ### GUI Functionality Video Demo
 https://drive.google.com/file/d/1h3RFA_9uvHDd9rbV4NpVV3qNjaVmApRX/view?usp=sharing
+
+
+### Hardware Installation
+1. Plug in a 1080p logitech camera into the laptop
+2. Plug the 7in LCD screen into the laptop
+3. Plug the car’s power adapter into the laptop
+4. Plug the OBD port into laptop
+
+### Software Installation Steps
+Install VSCode
+Install Python3 from https://www.python.org/downloads/
+
+Install ultralytics by cloning the yolo v8 github at https://github.com/ultralytics/ultralytics
+
+To install OpenCV use this command for Windows.
+```
+pip install opencv-contrib-python
+```
+To install ultralytics use this command.
+```
+pip install ultralytics
+```
+This install is used to send POST requests for the audible alerts.
+```
+pip install requests
+```
+This is a Tensor library like NumPy, with strong GPU support.
+```
+pip install torch
+```
+This is used for the GUI as it is a web application framework.
+```
+pip install flask
+```
+This is required if you want to utilize CUDA to improved performance. Utilizing only the CPU is possible, but, for the best performance, it is recommended to install the newest version of CUDA and Pytorch.
+```
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
