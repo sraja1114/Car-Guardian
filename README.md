@@ -58,3 +58,104 @@ This is required if you want to utilize CUDA to improved performance. Utilizing 
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
+### Installing Cuda
+To use CUDA on your system, you will need the following installed:
+- A CUDA-capable GPU
+- This would be all NVIDIA GeForce, Quadro, and Tesla GPUs
+- NVIDIA CUDA Toolkit (available at https://developer.nvidia.com/cuda-downloads)
+- A supported version of Linux with a gcc compiler and toolchain (if on Linux)
+
+To check if your GPU is compatible with CUDA:
+- On Windows, you can verify that you have a CUDA-capable GPU through the Display Adapters section in the Windows Device Manager. Here you will find the vendor name and model of your graphics card(s). If you have an NVIDIA card that is listed in https://developer.nvidia.com/cuda-gpus, that GPU is CUDA-capable. The Release Notes for the CUDA Toolkit also contain a list of supported products.
+- The Windows Device Manager can be opened via the following steps:
+  1. Open a run window from the Start Menu
+  2. control /name Microsoft.DeviceManager
+- To check on either operating system, you can visit https://developer.nvidia.com/cuda-gpus to see if your GPU is on the approved list provided by NVIDIA. 
+
+### Verifying CUDA Installation
+- Open a command prompt (on Windows) or a terminal (on Linux).
+- Type nvcc --version and press Enter.
+- If CUDA is installed correctly, you should see the version of the CUDA Toolkit that is installed, along with the version of the NVIDIA GPU driver.
+
+### Installing Pytorch
+- To install Pytorch on Windows or Linux using pip, use the command provided:
+``` 
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118.
+```
+- For any other configurations, visit https://pytorch.org/get-started/locally/ for more information on Pytorch installation. The Pytorch documentation provides installation instructions for different versions of CUDA and for those who prefer technologies like conda rather than pip.
+
+### Verifying Pytorch Installation
+To ensure that PyTorch was installed correctly, we can verify the installation by running sample PyTorch code. Here we will construct a randomly initialized tensor.
+From the command line, type: 
+```
+python
+```
+Then:
+```
+import torch
+x = torch.rand(5, 3)
+print(x)
+```
+The output should be something similar to:
+```
+tensor([[0.3380, 0.3845, 0.3217],
+        [0.8337, 0.9050, 0.2650],
+        [0.2979, 0.7141, 0.9069],
+        [0.1449, 0.1132, 0.1375],
+        [0.4675, 0.3947, 0.1426]])
+```
+### Testing Pytorch with CUDA in Python
+The following code can be run if Pytorch is able to detect your GPU:
+```
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+print('Using device:', device)
+print()
+```
+This code would produce an output like this:
+```
+Using device: cuda
+```
+To get additional info when using CUDA:
+```
+#Additional Info when using cuda
+if device.type == 'cuda':
+    print(torch.cuda.get_device_name(0))
+    print('Memory Usage:')
+    print('Allocated:', round(torch.cuda.memory_allocated(0)/1024**3,1), 'GB')
+    print('Cached:   ', round(torch.cuda.memory_reserved(0)/1024**3,1), 'GB')
+```
+This code would output like this:
+```
+Tesla K80
+Memory Usage:
+Allocated: 0.3 GB
+Cached:    0.6 GB
+```
+### To Use Your Device’s CPU instead of GPU
+In our code, we have two locations you would want to alter the code in order to use the CPU rather than the GPU. 
+The first would be in FocalCalculation.py:
+
+![image](https://github.com/sraja1114/YOLOv4-distance-tracking/assets/123511793/26f21ee7-ccfc-41c0-be41-3a345bc20b9d)
+
+On line 28, you would want to change the code so it reads as follows:
+```
+device = 'cpu'
+print(f'Using device: {device}')
+model = YOLO('yolov8n.pt').to(device)
+```
+
+The second change is in mainOBD.py:
+
+![image](https://github.com/sraja1114/YOLOv4-distance-tracking/assets/123511793/fc79e50a-a0d1-423d-9c8b-929695b287da)
+
+On line 204, you want the code to be similar to before:
+```
+device = 'cpu'
+print(f'Using device: {device}')
+model = YOLO('yolov8n.pt').to(device)
+```
+
+### OBS Studio Instructions
+The next piece of software that should be installed is OBS Studio. OBS Studio’s virtual camera feature was used to allow multiple programs to use the webcam simultaneously. Below will be the installation instruction and setup process.
+
+To install OBS Studio, visit the following website to download executable for your operating system: https://obsproject.com/download.
